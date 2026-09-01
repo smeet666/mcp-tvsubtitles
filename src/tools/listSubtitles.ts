@@ -16,7 +16,6 @@ import { z } from "zod";
 import { TvSubtitlesError } from "../errors.js";
 import type { SubtitleRecord, TvSubtitlesClient } from "../tvsubtitles/client.js";
 import { requireLanguage } from "../tvsubtitles/client.js";
-import { languageBySiteCode } from "../tvsubtitles/languages.js";
 import { refusalMessage, strictInput } from "./arguments.js";
 import { ok, READS_CATALOGUE_ONLY, SOURCE_NAME, type ToolResult } from "./shared.js";
 import { subtitleRowSchema, toSubtitleRow } from "./subtitleRow.js";
@@ -467,7 +466,3 @@ async function records(
     { notes },
   );
 }
-
-/** Kept beside the tool so a coverage row can name a language the site drew. */
-export const languageNameOf = (siteCode: string): string | null =>
-  languageBySiteCode(siteCode)?.name ?? null;

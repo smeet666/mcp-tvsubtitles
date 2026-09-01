@@ -51,6 +51,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the budget covers this client's own waits between attempts.
 - A text block cut to fit ends on one ellipsis rather than two.
 
+### Removed
+
+- `languageNameOf`, an export of a tool module that no caller could reach.
+  The package publishes two entry points, neither of which leads to it.
+
 ## [1.0.0] - 2026-09-01
 
 ### Changed

@@ -106,6 +106,22 @@ certain.
 The filename ends in the same site code, and it agreed with the language named on
 the page on all 50 records.
 
+## The file itself is gated, on purpose
+
+`/download-<id>.html` serves no file. It serves a small page holding a countdown
+and the file's address split across several variables, joined at run time by the
+browser. A reader that does not execute the page's script finds no link in it.
+
+Splitting an address into fragments is a measure taken against automated
+readers, and waiting out a countdown is a limit taken against them too.
+Reassembling the one or sitting through the other would be a circumvention, so
+this server does neither and offers no tool that would need to.
+
+This is why every answer ends at `page_url`, and why the download route is never
+called. It is also why no tool can report what a subtitle file contains, how
+many lines it holds or what span it covers: reaching the file at all is what the
+site declines.
+
 ## Fields this site does not publish
 
 `imdb_id`, `tmdb_id`, `machine_translated` and `hearing_impaired` appear nowhere.

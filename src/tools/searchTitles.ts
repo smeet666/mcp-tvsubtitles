@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 import { TvSubtitlesError } from "../errors.js";
-import type { SearchRow, TvSubtitlesClient } from "../tvsubtitles/client.js";
+import type { Dropped, SearchRow, TvSubtitlesClient } from "../tvsubtitles/client.js";
 import { refusalMessage, strictInput } from "./arguments.js";
 import { ok, SOURCE_NAME, type ToolResult } from "./shared.js";
 
@@ -175,6 +175,38 @@ async function catalogueCounts(client: TvSubtitlesClient): Promise<Map<number, I
   return counts;
 }
 
+/**
+ * What an answer left out, each population under its own reason.
+ *
+ * Three things get dropped and they are not the same. A row carrying an attack
+ * probe was written into the catalogue through the site's own add form; a row
+ * with no name is one the site served empty; a row this could not read is a
+ * failure of the reading. Reporting all three under the first reason states of
+ * every one of them what is true of some.
+ */
+function droppedNote(dropped: Dropped): string | null {
+  const said: string[] = [];
+  if (dropped.payloads > 0) {
+    said.push(
+      `${dropped.payloads} carried a name written into the catalogue through the site's own add form, which is not a show`,
+    );
+  }
+  if (dropped.unnamed > 0) {
+    said.push(`${dropped.unnamed} carried no name at all`);
+  }
+  if (dropped.unreadable > 0) {
+    said.push(`${dropped.unreadable} came back too incomplete to read`);
+  }
+  if (said.length === 0) {
+    return null;
+  }
+  const total =
+    said.length === 1
+      ? ""
+      : `${dropped.payloads + dropped.unnamed + dropped.unreadable} rows were left out. `;
+  return `${total}${said.join("; ")}.`;
+}
+
 const MOVIE_REFUSAL =
   "tvsubtitles.net catalogues television series only. Searching it for a film would come back empty, " +
   "which would report an absence this site cannot establish.";
@@ -241,10 +273,9 @@ export async function runSearchTitles(
       `${rendered.length} of the ${kept.length} rows this search came back with are rendered here. Raise 'limit' for the rest.`,
     );
   }
-  if (read.skipped) {
-    notes.push(
-      `${read.skipped} ${read.skipped === 1 ? "row was" : "rows were"} dropped: the site serves names written into its catalogue through its own add form, and they are not shows.`,
-    );
+  const leftOut = droppedNote(read.data.dropped);
+  if (leftOut !== null) {
+    notes.push(leftOut);
   }
 
   // Read only when asked for: the figures live on the catalogue index, which is

@@ -241,8 +241,7 @@ holds whatever is passed.
 One request at a time, two seconds apart, widening when the site pushes back and
 narrowing again on a run of clean answers. The floor of 1.5 seconds cannot be
 lowered. The agent string carries the project name, its version and the address
-of this repository, so the site can reach a person about traffic it did not
-expect.
+of this repository, so the site can reach a person.
 
 Subtitles are the work of the people who wrote and timed them. This server reads
 the catalogue and downloads no subtitle file: every record carries `page_url`,
@@ -518,8 +517,7 @@ d'intervalle tient quoi qu'on lui passe.
 Une requête à la fois, deux secondes d'écart, élargi quand le site repousse et
 resserré après une série de réponses propres. Le plancher d'une seconde et demie
 ne peut pas être abaissé. La chaîne d'agent porte le nom du projet, sa version et
-l'adresse de ce dépôt, pour que le site puisse joindre une personne à propos d'un
-trafic qu'il n'attendait pas.
+l'adresse de ce dépôt, pour que le site puisse joindre une personne.
 
 Les sous-titres sont l'œuvre de ceux qui les ont écrits et calés. Ce serveur lit
 le catalogue et ne télécharge aucun fichier de sous-titres : chaque fiche porte

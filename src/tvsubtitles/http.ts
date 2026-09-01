@@ -176,7 +176,7 @@ async function readRefusal(
     return {
       kind: "refused",
       pushBack: false,
-      error: notFound("tvsubtitles.net holds nothing at this address.", {
+      error: notFound(`tvsubtitles.net holds nothing at ${new URL(url).pathname}.`, {
         url,
         status: response.status,
       }),

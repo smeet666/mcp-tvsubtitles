@@ -91,6 +91,22 @@ export const listLanguagesOutputShape = {
   notes: z.array(z.string()),
 } as const;
 
+/**
+ * What a page said about the seasons a show holds, and what that means here.
+ *
+ * A show with one season has no other for a reader to go looking through, and a
+ * page naming none says nothing worth enumerating.
+ */
+const seasonsHeld = (seasons: readonly number[]): string => {
+  if (seasons.length === 0) {
+    return "Its page names no season, so nothing here says which others it holds.";
+  }
+  if (seasons.length === 1) {
+    return "This show holds one season.";
+  }
+  return `This show holds seasons ${seasons.join(", ")}, and another season may hold languages this one does not.`;
+};
+
 const CATALOGUE_NOTE =
   "These are the languages the site catalogues, whatever any one show holds. Pass a show id to read what a show holds.";
 
@@ -197,10 +213,7 @@ async function oneShow(
 
   // The warning about other seasons is written only where there are others: a
   // show holding one season has none for a reader to go looking through.
-  const holds =
-    page.seasonsAvailable.length === 1
-      ? "This show holds one season."
-      : `This show holds seasons ${page.seasonsAvailable.join(", ")}, and another season may hold languages this one does not.`;
+  const holds = seasonsHeld(page.seasonsAvailable);
   const notes = [
     `Measured over season ${page.season}, the ${season === undefined ? "newest season the site holds" : "season asked for"}. ${holds}`,
     "A count is episodes of that season holding the language, not files: an episode row says which languages hold something and not how many files each one holds.",

@@ -46,7 +46,7 @@ const TRAILING_COMMENT = /--\s*-?\s*$/;
 export function isPayload(name: string): boolean {
   const trimmed = name.trim();
   if (trimmed === "") {
-    return true;
+    return false;
   }
   if (PAYLOAD.test(trimmed)) {
     return true;
@@ -71,10 +71,28 @@ export interface ShowRow {
   year: string | null;
 }
 
+/**
+ * The rows an answer left out, counted by why.
+ *
+ * Three things get dropped and they are not the same thing. Reporting them
+ * under one reason states of every dropped row what is true of one population,
+ * which is a count saying more than it measured.
+ */
+export interface Dropped {
+  /** Names written into the catalogue through the site's own add form. */
+  payloads: number;
+  /** Rows the site served with no name at all. */
+  unnamed: number;
+  /** Rows too incomplete for this to read. */
+  unreadable: number;
+}
+
+export const droppedTotal = (dropped: Dropped): number =>
+  dropped.payloads + dropped.unnamed + dropped.unreadable;
+
 export interface ShowIndex {
   shows: ShowRow[];
-  /** Rows dropped as payloads, which the answer reports rather than hides. */
-  skipped: number;
+  dropped: Dropped;
 }
 
 /**
@@ -110,14 +128,18 @@ const INDEX_ROW =
 /** Read the whole catalogue from the index page. */
 export function parseShowIndex(html: string): ShowIndex {
   const shows: ShowRow[] = [];
-  let skipped = 0;
+  const dropped: Dropped = { payloads: 0, unnamed: 0, unreadable: 0 };
   let readable = 0;
 
   for (const match of html.matchAll(INDEX_ROW)) {
     readable += 1;
     const name = plainText(captured(match, 2));
+    if (name === "") {
+      dropped.unnamed += 1;
+      continue;
+    }
     if (isPayload(name)) {
-      skipped += 1;
+      dropped.payloads += 1;
       continue;
     }
     const year = plainText(captured(match, 6));
@@ -135,7 +157,8 @@ export function parseShowIndex(html: string): ShowIndex {
     throw parseFailure("The show index came back without a single readable row.");
   }
   const present = [...html.matchAll(DATA_ROW)].length;
-  return { shows, skipped: skipped + Math.max(0, present - readable) };
+  dropped.unreadable = Math.max(0, present - readable);
+  return { shows, dropped };
 }
 
 /** One row of a search answer. */
@@ -158,21 +181,25 @@ const FLAG = /images\/flags\/([a-z]{2})\.gif/g;
  * An empty list here is a real absence: the site ran the search and matched
  * nothing, which is a different answer from a page it could not read.
  */
-export function parseSearchResults(html: string): { rows: SearchRow[]; skipped: number } {
+export function parseSearchResults(html: string): { rows: SearchRow[]; dropped: Dropped } {
   if (!html.includes("Search results")) {
     throw parseFailure("The search answer did not come back as a list of results.");
   }
 
   const rows: SearchRow[] = [];
-  let skipped = 0;
+  const dropped: Dropped = { payloads: 0, unnamed: 0, unreadable: 0 };
 
   for (const match of html.matchAll(SEARCH_ROW)) {
     const label = plainText(captured(match, 2));
     // The site writes the years inside the link, after the name.
     const withYear = SEARCH_YEARS.exec(label);
     const name = withYear ? captured(withYear, 1) : label;
+    if (name.trim() === "") {
+      dropped.unnamed += 1;
+      continue;
+    }
     if (isPayload(name)) {
-      skipped += 1;
+      dropped.payloads += 1;
       continue;
     }
     const languages = [...captured(match, 3).matchAll(FLAG)]
@@ -187,7 +214,7 @@ export function parseSearchResults(html: string): { rows: SearchRow[]; skipped: 
     });
   }
 
-  return { rows, skipped };
+  return { rows, dropped };
 }
 
 /** Where a language's flag on a season page points. */

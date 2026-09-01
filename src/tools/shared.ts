@@ -37,13 +37,28 @@ export function truncate(text: string, maxChars: number): string {
 const MARKER_LINE = /^[ \t]*(?:note|source|warning|system)[ \t ]*:/gim;
 
 /**
+ * The characters that reorder a line rather than say anything in it.
+ *
+ * An override or an embedding makes what follows read in the other direction,
+ * which turns this server's own words, its notes and its credit line, around
+ * without altering one of them. It is the same forgery the marker lines guard
+ * against, worked on a line's direction instead of its wording, so it is
+ * answered in the same place: the rendered block. Nothing here reaches a
+ * right-to-left script, which the reading algorithm lays out on its own without
+ * any of these.
+ */
+const DIRECTION_CONTROLS = /[\u202A-\u202E\u2066-\u2069\u200E\u200F]/g;
+
+/**
  * Keep text from the site out of the shape this server's own lines take.
  *
  * Quoting survives a reader trimming the line, where a leading space would not.
  * The structured output still carries the text exactly as it was published.
  */
 function quoteMarkerLines(body: string): string {
-  return body.replace(MARKER_LINE, (whole) => `> ${whole.trimStart()}`);
+  return body
+    .replace(DIRECTION_CONTROLS, "")
+    .replace(MARKER_LINE, (whole) => `> ${whole.trimStart()}`);
 }
 
 /**

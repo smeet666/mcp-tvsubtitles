@@ -127,6 +127,19 @@ export const listSubtitlesOutputShape = {
     .describe("Coverage rows when 'kind' is 'coverage', subtitle records when it is 'subtitles'."),
 } as const;
 
+/**
+ * What a page said about the seasons a show holds.
+ *
+ * A page naming none says nothing, and enumerating an empty list would put a
+ * sentence with nothing in it in front of a reader.
+ */
+const seasonsHeld = (seasons: readonly number[]): string => {
+  if (seasons.length === 0) {
+    return "Its page names no season, so nothing here says which it holds.";
+  }
+  return `It holds ${seasons.length === 1 ? "season" : "seasons"} ${seasons.join(", ")}.`;
+};
+
 const showIdOf = (raw: string): number => {
   const id = Number.parseInt(raw, 10);
   if (!(Number.isSafeInteger(id) && id > 0 && String(id) === raw.trim())) {
@@ -155,7 +168,7 @@ export async function runListSubtitles(
 
   if (requested !== null && page.season !== requested) {
     notes.push(
-      `The site served season ${page.season} for a request naming season ${requested}. It holds seasons ${page.seasonsAvailable.join(", ")}.`,
+      `The site served season ${page.season} for a request naming season ${requested}. ${seasonsHeld(page.seasonsAvailable)}`,
     );
   }
   if (requested === null) {
@@ -165,7 +178,7 @@ export async function runListSubtitles(
   }
   if (page.episodes.length === 0) {
     notes.push(
-      `The site published this season's page and listed no episodes on it, which is what it answered rather than a failure to read it. It holds seasons ${page.seasonsAvailable.join(", ") || "none"}.`,
+      `The site published this season's page and listed no episodes on it, which is what it answered rather than a failure to read it. ${seasonsHeld(page.seasonsAvailable)}`,
     );
   }
 
@@ -308,7 +321,18 @@ async function records(
     // nothing rather than the episode being absent. It is read again without
     // the narrowing so the answer can say what was set aside.
     const whole = await client.listEpisodeSubtitles(row.episodeId);
-    if (whole.data.length > 0) {
+    // The site keeps a page per language beside the episode's own page, and the
+    // two can disagree. What the answer says about the language is decided on
+    // the rows it is about to render, never on the read that came back empty:
+    // claiming an absence while displaying rows in that very language would
+    // contradict the payload beside the note.
+    const held = whole.data.filter((record) => record.siteCode === language.siteCode);
+    if (held.length > 0) {
+      rows = held;
+      notes.push(
+        `The site's page for that language came back empty while the episode's own page holds ${held.length === 1 ? "a subtitle" : "subtitles"} in it. These were read from the episode's page.`,
+      );
+    } else if (whole.data.length > 0) {
       rows = whole.data;
       dropped.push(...applied.splice(0));
       notes.push(

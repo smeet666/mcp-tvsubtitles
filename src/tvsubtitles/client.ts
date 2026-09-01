@@ -16,8 +16,9 @@ import type { Read } from "../types.js";
 import { Cache } from "./cache.js";
 import { fetchPage, type Page } from "./http.js";
 import { type Language, resolveLanguage } from "./languages.js";
-import type { SearchRow, ShowRow, SiteTotals } from "./parse.js";
+import type { Dropped, SearchRow, ShowRow, SiteTotals } from "./parse.js";
 import {
+  droppedTotal,
   parseEpisodeListing,
   parseSearchResults,
   parseSeasonPage,
@@ -45,6 +46,7 @@ export interface ClientOptions {
 }
 
 export type {
+  Dropped,
   EpisodeRow,
   SearchRow,
   SeasonPage,
@@ -70,6 +72,22 @@ export function requireLanguage(named: string): Language {
   return language;
 }
 
+/** Every setting a read needs, so a caller supplying them all is taken at their word. */
+const SETTINGS: readonly (keyof Config)[] = [
+  "userAgent",
+  "maxBodyBytes",
+  "budgetMs",
+  "minIntervalMs",
+  "timeoutMs",
+  "maxRetries",
+  "cacheTtlMs",
+  "cacheMaxEntries",
+  "logLevel",
+];
+
+const isComplete = (given: Partial<Config> | undefined): given is Config =>
+  given !== undefined && SETTINGS.every((key) => given[key] !== undefined);
+
 export class TvSubtitlesClient {
   private readonly config: Config;
   private readonly logger: Logger;
@@ -80,8 +98,12 @@ export class TvSubtitlesClient {
   constructor(options: ClientOptions = {}) {
     // Guarded after the merge, not before: settings handed in whole are the
     // other way into this constructor, and a floor applied only to what the
-    // environment set would leave that one open.
-    this.config = enforceFloors({ ...loadConfig(), ...options.config });
+    // environment set would leave that one open. A caller handing over settings
+    // that are already complete has read the environment once, and reading it
+    // again would repeat every complaint it made.
+    this.config = enforceFloors(
+      isComplete(options.config) ? options.config : { ...loadConfig(), ...options.config },
+    );
     this.logger = options.logger ?? createLogger(this.config.logLevel);
     this.limiter = new RateLimiter({ intervalMs: this.config.minIntervalMs });
     this.cache = new Cache<Page>(this.config.cacheTtlMs, this.config.cacheMaxEntries);
@@ -137,24 +159,29 @@ export class TvSubtitlesClient {
   }
 
   /** Every show the site holds, with the payload rows dropped and counted. */
-  async listShows(): Promise<Read<{ shows: ShowRow[]; totals: SiteTotals }>> {
+  async listShows(): Promise<Read<{ shows: ShowRow[]; totals: SiteTotals; dropped: Dropped }>> {
     const { value, cached } = await this.read(showIndexUrl(), (page) => ({
       index: parseShowIndex(page.body),
       totals: parseSiteTotals(page.body),
     }));
     const index = value.index;
-    if (index.skipped > 0) {
-      this.logger.warn(`${index.skipped} index rows were dropped as injection payloads`);
+    const total = droppedTotal(index.dropped);
+    if (total > 0) {
+      this.logger.warn(
+        `${total} index rows left out: ${index.dropped.payloads} written through the add form, ${index.dropped.unnamed} with no name, ${index.dropped.unreadable} unreadable`,
+      );
     }
     return {
-      data: { shows: index.shows, totals: value.totals },
+      data: { shows: index.shows, totals: value.totals, dropped: index.dropped },
       cached,
-      ...(index.skipped > 0 ? { skipped: index.skipped } : {}),
+      ...(total > 0 ? { skipped: total } : {}),
     };
   }
 
   /** Ask the site's own search, which it takes as a form rather than an address. */
-  async searchShows(query: string): Promise<Read<{ rows: SearchRow[]; totals: SiteTotals }>> {
+  async searchShows(
+    query: string,
+  ): Promise<Read<{ rows: SearchRow[]; totals: SiteTotals; dropped: Dropped }>> {
     const trimmed = query.trim();
     if (trimmed === "") {
       throw invalidInput("A search needs something to look for.", "Pass a show name in 'query'.");
@@ -165,10 +192,11 @@ export class TvSubtitlesClient {
       { qs: trimmed },
     );
     const found = value.found;
+    const total = droppedTotal(found.dropped);
     return {
-      data: { rows: found.rows, totals: value.totals },
+      data: { rows: found.rows, totals: value.totals, dropped: found.dropped },
       cached,
-      ...(found.skipped > 0 ? { skipped: found.skipped } : {}),
+      ...(total > 0 ? { skipped: total } : {}),
     };
   }
 

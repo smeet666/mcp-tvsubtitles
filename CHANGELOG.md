@@ -48,6 +48,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   own languages carry one, and warns about a show's other seasons only where it
   holds others. It announced none and enumerated nothing, and told a show with
   one season to look through its others.
+- What an answer says about a language it narrowed by is decided on the rows it
+  renders. The site keeps a page per language beside an episode's own page, and
+  where the two disagree the answer claimed an absence while displaying rows in
+  that very language.
+- The rows an answer left out are reported under their own reasons. A name
+  written into the catalogue through the site's add form, a row served with no
+  name, and a row too incomplete to read were counted together and all three
+  attributed to the first.
+- A page naming no season is not enumerated. Two notes printed an empty list
+  where the page said nothing.
+- Characters that reverse a line's direction are taken out of the rendered
+  block. They turn this server's own notes and its credit line around without
+  altering a word, which is the forgery the marker lines already guard against
+  worked on direction instead of wording. The structured payload keeps what it
+  received.
+- Settings handed over already resolved are not read from the environment a
+  second time, so a refused variable is complained about once.
+- A refusal on an address the site holds nothing at names that address.
 
 ## [0.2.0] - 2026-09-01
 

@@ -147,14 +147,21 @@ export async function runListLanguages(
   }
 
   return parsed.data.id === undefined
-    ? wholeCatalogue()
+    ? wholeCatalogue(parsed.data.season)
     : await oneShow(client, parsed.data.id, parsed.data.season);
 }
 
-function wholeCatalogue(): ToolResult {
+function wholeCatalogue(season: number | undefined): ToolResult {
   const languages = catalogue();
   const divergences = isoNote(languages);
   const notes = divergences === null ? [CATALOGUE_NOTE] : [CATALOGUE_NOTE, divergences];
+  // A season narrows a show, and the catalogue has none. Dropping it without a
+  // word would let a caller read this answer as that season's languages.
+  if (season !== undefined) {
+    notes.push(
+      `A 'season' was named without an 'id', and the catalogue has no season, so season ${season} was set aside. Pass a show id to read what one season of one show holds.`,
+    );
+  }
   const body = [
     "Languages tvsubtitles.net catalogues subtitles in.",
     ...languages.map(
@@ -187,9 +194,13 @@ async function oneShow(
 ): Promise<ToolResult> {
   const showId = Number.parseInt(rawId, 10);
   if (!(Number.isSafeInteger(showId) && showId > 0 && String(showId) === rawId.trim())) {
-    throw new TvSubtitlesError("invalid_input", `'${rawId}' is not a show id from search_titles.`, {
-      hint: "Ids are whole numbers and come back from search_titles.",
-    });
+    throw new TvSubtitlesError(
+      "invalid_input",
+      `'id' was given '${rawId}', which is not a show id from search_titles.`,
+      {
+        hint: "Ids are whole numbers and come back from search_titles.",
+      },
+    );
   }
 
   // Season 0 is how the site is asked for its newest season.

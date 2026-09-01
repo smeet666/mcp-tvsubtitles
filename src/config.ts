@@ -119,8 +119,15 @@ export function enforceFloors(config: Config): Config {
       ? Math.min(asked, MAX_ALLOWED_INTERVAL_MS)
       : MIN_ALLOWED_INTERVAL_MS;
   if (paced !== asked) {
+    // Named for what was actually wrong with it: a value pushed up to the floor
+    // and one pulled down to the ceiling are two different mistakes, and one
+    // message for both tells half the callers the opposite of what happened.
+    const wrong =
+      paced === MIN_ALLOWED_INTERVAL_MS
+        ? `is below the ${MIN_ALLOWED_INTERVAL_MS}ms floor this server keeps`
+        : `is above the ${MAX_ALLOWED_INTERVAL_MS}ms ceiling, past which a request looks hung rather than paced`;
     process.stderr.write(
-      `${PREFIX} error: a minimum interval of ${asked}ms is below the ${MIN_ALLOWED_INTERVAL_MS}ms floor this server keeps; using ${paced}.\n`,
+      `${PREFIX} error: a minimum interval of ${asked}ms ${wrong}; using ${paced}.\n`,
     );
   }
 

@@ -268,6 +268,8 @@ export interface SeasonPage {
 }
 
 const SEASON_TITLE = /<title>[^<]*Subtitles\s+"(.*?)"\s+season\s+(\d+)/i;
+/** The heading of the table a season page lists its episodes in. */
+const SEASON_TABLE = /<th[^>]*><b>Episode<\/b><\/th>/i;
 /**
  * The paragraph the site heads a season page with, listing every season it
  * holds for the show.
@@ -296,6 +298,15 @@ export function parseSeasonPage(html: string, askedShowId: number): SeasonPage |
   const titled = SEASON_TITLE.exec(html);
   if (!titled) {
     throw parseFailure("A season page came back without the heading that names its show.");
+  }
+
+  // The site heads every season page with this table, the page it answers a
+  // season past the last one with and the page it answers a show it does not
+  // hold with both included. A page without it is not one of its answers, and
+  // reporting it as a season published empty would state an absence nobody
+  // established.
+  if (!SEASON_TABLE.test(html)) {
+    throw parseFailure("A season page came back without the table it lists episodes in.");
   }
 
   const showName = plainText(captured(titled, 1));

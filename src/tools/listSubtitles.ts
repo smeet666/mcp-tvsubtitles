@@ -143,9 +143,13 @@ const seasonsHeld = (seasons: readonly number[]): string => {
 const showIdOf = (raw: string): number => {
   const id = Number.parseInt(raw, 10);
   if (!(Number.isSafeInteger(id) && id > 0 && String(id) === raw.trim())) {
-    throw new TvSubtitlesError("invalid_input", `'${raw}' is not a show id from search_titles.`, {
-      hint: "Ids are whole numbers and come back from search_titles.",
-    });
+    throw new TvSubtitlesError(
+      "invalid_input",
+      `'id' was given '${raw}', which is not a show id from search_titles.`,
+      {
+        hint: "Ids are whole numbers and come back from search_titles.",
+      },
+    );
   }
   return id;
 };
@@ -160,6 +164,11 @@ export async function runListSubtitles(
   }
 
   const showId = showIdOf(parsed.data.id);
+  // Resolved before anything is read. A language this site does not hold is a
+  // refusal of an argument, and a refusal costs the site no request.
+  const language =
+    parsed.data.language === undefined ? undefined : requireLanguage(parsed.data.language);
+
   const requested = parsed.data.season ?? null;
   // Season 0 is how the site is asked for its newest season.
   const read = await client.getSeason(showId, requested ?? 0);
@@ -182,8 +191,6 @@ export async function runListSubtitles(
     );
   }
 
-  const language =
-    parsed.data.language === undefined ? undefined : requireLanguage(parsed.data.language);
   const applied = language ? [`language=${language.name}`] : [];
   const limit = parsed.data.limit ?? DEFAULT_LIMIT;
 

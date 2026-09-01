@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 import { TvSubtitlesError } from "../errors.js";
-import type { Dropped, SearchRow, TvSubtitlesClient } from "../tvsubtitles/client.js";
+import type { Dropped, SearchRow, ShowRow, TvSubtitlesClient } from "../tvsubtitles/client.js";
 import { refusalMessage, strictInput } from "./arguments.js";
 import { ok, SOURCE_NAME, type ToolResult } from "./shared.js";
 
@@ -162,10 +162,9 @@ interface IndexCounts {
  * left out of the map rather than entered with zeros: the caller has to be able
  * to tell a show with nothing from one the index never mentioned.
  */
-async function catalogueCounts(client: TvSubtitlesClient): Promise<Map<number, IndexCounts>> {
-  const read = await client.listShows();
+function countsOf(shows: readonly ShowRow[]): Map<number, IndexCounts> {
   const counts = new Map<number, IndexCounts>();
-  for (const show of read.data.shows) {
+  for (const show of shows) {
     counts.set(show.id, {
       subtitles: show.subtitles,
       episodes: show.episodes,
@@ -208,8 +207,8 @@ function droppedNote(dropped: Dropped): string | null {
 }
 
 const MOVIE_REFUSAL =
-  "tvsubtitles.net catalogues television series only. Searching it for a film would come back empty, " +
-  "which would report an absence this site cannot establish.";
+  "'media_type' was given 'movie', and tvsubtitles.net catalogues television series only. Searching " +
+  "it for a film would come back empty, which would report an absence this site cannot establish.";
 
 /** Whether the years a show publishes cover the one that was asked for. */
 function coversYear(row: SearchRow, year: number): boolean {
@@ -270,7 +269,7 @@ export async function runSearchTitles(
   const rendered = kept.slice(0, limit);
   if (rendered.length < kept.length) {
     notes.push(
-      `${rendered.length} of the ${kept.length} rows this search came back with are rendered here. Raise 'limit' for the rest.`,
+      `${rendered.length} of the ${kept.length} rows left after filtering are rendered here, out of the ${all.length} the search came back with. Raise 'limit' for the rest.`,
     );
   }
   const leftOut = droppedNote(read.data.dropped);
@@ -287,11 +286,18 @@ export async function runSearchTitles(
   // letting it raise would destroy a result the site had given.
   let counts: Map<number, IndexCounts> | null = null;
   let countsUnread: string | null = null;
+  // True only while every page this answer needed came from memory. The index is
+  // a second page, so an answer that had to fetch it cost the site a request
+  // whatever the search itself cost.
+  let fromMemory = read.cached;
   if (counted) {
     try {
-      counts = await catalogueCounts(client);
+      const catalogue = await client.listShows();
+      fromMemory &&= catalogue.cached;
+      counts = countsOf(catalogue.data.shows);
     } catch (error) {
       countsUnread = error instanceof Error ? error.message : String(error);
+      fromMemory = false;
     }
   }
   let uncounted = 0;
@@ -349,12 +355,12 @@ export async function runSearchTitles(
       query: parsed.data.query,
       results,
       result_count: results.length,
-      total_available: kept.length,
+      total_available: all.length,
       total_counts: "rows_served" as const,
       counts_scope: counted && countsUnread === null ? ("whole_show" as const) : null,
       filters_applied: applied,
       filters_dropped: dropped,
-      cached: read.cached,
+      cached: fromMemory,
       source: SOURCE_NAME,
       notes,
     },

@@ -65,7 +65,7 @@ export function requireLanguage(named: string): Language {
   const language = resolveLanguage(named);
   if (!language) {
     throw invalidInput(
-      `tvsubtitles.net holds no language called '${named}'.`,
+      `'language' was given '${named}', and tvsubtitles.net holds no language by that name.`,
       "Call list_languages to see the twenty-four it holds, each with the name and the code it answers to.",
     );
   }

@@ -29,6 +29,27 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A refusal carries the same two defences an answer does. It quotes a line
   shaped like one this server writes and takes out the characters that reverse
   a line's direction, both of which reach it through a show's name.
+- The arabic letter mark is taken out of the rendered block with the other
+  direction controls. Unicode counts nine and eight were being removed.
+- A season page this server cannot read comes back as `parse_failure`. The site
+  heads every season page with its episode table, the page for a season past
+  the last one included, so a page without it was being reported as a season
+  the site published empty.
+- A language a caller named is resolved before anything is read, so a language
+  this site does not hold is refused without costing the site a request.
+- A refusal written by a tool names the argument it is about, as a refusal from
+  the schema does.
+- `total_available` counts the rows the site's answer held, before a filter
+  narrowed them, which is what its name and its description say.
+- An answer that needed the catalogue index reports itself as cached only when
+  both pages came from memory.
+- A season named without a show id is said to have been set aside rather than
+  dropped in silence.
+- A setting outside the range this server keeps is complained about for what
+  was wrong with it: a value above the ceiling was being called too low.
+- A read that spends its whole budget says so without blaming the site, since
+  the budget covers this client's own waits between attempts.
+- A text block cut to fit ends on one ellipsis rather than two.
 
 ## [1.0.0] - 2026-09-01
 

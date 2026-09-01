@@ -285,6 +285,19 @@ function requestInit(
   };
 }
 
+/**
+ * The refusal a read spent its whole budget on.
+ *
+ * Said without blaming the site: the budget covers the waits this client takes
+ * between attempts as well as the time the site spends, and a refusal answered
+ * promptly can exhaust it just as silence can.
+ */
+const spentBudget = (budgetMs: number, attempts: number, url: string) =>
+  timeoutError(
+    `This read was given ${budgetMs}ms and spent them over ${attempts} ${attempts === 1 ? "attempt" : "attempts"}, counting the waits between them, without reaching an answer it could return.`,
+    { url },
+  );
+
 /** Growing wait with jitter, so several clients do not return in step. */
 function backoffMs(attempt: number): number {
   const base = Math.min(8000, 400 * 2 ** attempt);
@@ -319,10 +332,7 @@ export async function fetchPage(options: FetchOptions): Promise<Page> {
     // spent its budget stops rather than holding the one queue every other tool
     // waits behind. The caller is told what it cost, not left to guess.
     if (attempt > 0 && Date.now() + askedWaitMs >= spentBy) {
-      throw timeoutError(
-        `No answer from tvsubtitles.net within the ${options.budgetMs}ms one read is given, across ${attempt} attempts.`,
-        { url },
-      );
+      throw spentBudget(options.budgetMs, attempt, url);
     }
     if (askedWaitMs > 0) {
       logger.debug(`waiting ${askedWaitMs}ms, as asked`);

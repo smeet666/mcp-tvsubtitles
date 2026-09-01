@@ -58,7 +58,7 @@ export async function runGetSubtitle(
   if (!(Number.isSafeInteger(id) && id > 0 && String(id) === parsed.data.id.trim())) {
     throw new TvSubtitlesError(
       "invalid_input",
-      `'${parsed.data.id}' is not a subtitle id from list_subtitles.`,
+      `'id' was given '${parsed.data.id}', which is not a subtitle id from list_subtitles.`,
       { hint: "Ids are whole numbers and come back from list_subtitles." },
     );
   }

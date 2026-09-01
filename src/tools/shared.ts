@@ -20,6 +20,12 @@ export interface ToolResult {
   isError?: boolean;
 }
 
+/**
+ * Cut a string to a length, ending it on the one ellipsis that says it was cut.
+ *
+ * The mark is part of the budget rather than added past it, so a caller who
+ * appends nothing gets a string of exactly the length asked for.
+ */
 export function truncate(text: string, maxChars: number): string {
   if (text.length <= maxChars) {
     return text;
@@ -47,7 +53,7 @@ const MARKER_LINE = /^[ \t]*(?:note|source|warning|system)[ \t ]*:/gim;
  * right-to-left script, which the reading algorithm lays out on its own without
  * any of these.
  */
-const DIRECTION_CONTROLS = /[\u202A-\u202E\u2066-\u2069\u200E\u200F]/g;
+const DIRECTION_CONTROLS = /[\u202A-\u202E\u2066-\u2069\u200E\u200F\u061C]/g;
 
 /**
  * Keep text from the site out of the shape this server's own lines take.
@@ -84,12 +90,11 @@ export function ok(
   const wouldCut = safe.length > Math.max(0, MAX_TEXT_CHARS - provisional.length - 2);
 
   const trailer = trailerOf([...(options.notes ?? []), ...(wouldCut ? [CUT_NOTE] : [])]);
-  const cut = "…";
   const budget = Math.max(0, MAX_TEXT_CHARS - trailer.length - 2);
+  // `truncate` ends what it cuts on its own ellipsis, so nothing is appended
+  // here: doing both left the block trailing off on two of them.
   const text =
-    safe.length <= budget
-      ? `${safe}\n\n${trailer}`
-      : `${truncate(safe, Math.max(0, budget - cut.length))}${cut}\n\n${trailer}`;
+    safe.length <= budget ? `${safe}\n\n${trailer}` : `${truncate(safe, budget)}\n\n${trailer}`;
 
   return { content: [{ type: "text", text }], structuredContent: structured };
 }

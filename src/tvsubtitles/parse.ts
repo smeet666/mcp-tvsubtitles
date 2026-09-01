@@ -86,6 +86,24 @@ export interface ShowIndex {
  */
 const DATA_ROW = /<tr align="middle" bgcolor="#ffffff">/g;
 
+/** A whole data row, so what it holds can be read before it is counted. */
+const WHOLE_DATA_ROW = /<tr align="middle" bgcolor="#ffffff">[\s\S]*?<\/tr>/g;
+
+/**
+ * Whether a row of a season table was written as an episode.
+ *
+ * A season table holds two rows that are not episodes: a spacer, and an
+ * aggregate the site offers so a reader can take a whole season at once.
+ * Neither carries an episode code, and the aggregate addresses pages of a
+ * different shape, carrying two numbers where an episode's own page carries
+ * one. Counting either as an episode the reading failed on would make the
+ * count say something the page does not.
+ */
+const EPISODE_CODE_CELL = /<td>\d+x\d+<\/td>/;
+const EPISODE_OWN_PAGE = /href="episode-\d+\.html"/;
+const looksLikeEpisode = (row: string): boolean =>
+  EPISODE_CODE_CELL.test(row) || EPISODE_OWN_PAGE.test(row);
+
 const INDEX_ROW =
   /<td>\d+<\/td>\s*<td[^>]*><a href="tvshow-(\d+)-\d+\.html"><b>(.*?)<\/b><\/a><\/td>\s*<td>(.*?)<\/td>\s*<td>(.*?)<\/td>\s*<td>(.*?)<\/td>\s*<td>(.*?)<\/td>/gs;
 
@@ -276,7 +294,9 @@ export function parseSeasonPage(html: string, askedShowId: number): SeasonPage |
     });
   }
 
-  const rowsPresent = [...html.matchAll(DATA_ROW)].length;
+  const rowsPresent = [...html.matchAll(WHOLE_DATA_ROW)].filter((row) =>
+    looksLikeEpisode(row[0]),
+  ).length;
 
   return {
     showId: askedShowId,

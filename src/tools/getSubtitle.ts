@@ -65,9 +65,11 @@ export async function runGetSubtitle(
 
   const read = await client.getSubtitle(id);
   const record = read.data;
-  // The record names no show id of its own, so the row is credited to the
-  // subtitle rather than to a show this call never established.
-  const row = toSubtitleRow(record, { showId: id, readFrom: "record" });
+  // The record page names no show id, so none is claimed: crediting the row to
+  // the subtitle's own id would give one field two meanings depending on the
+  // route that produced the row, and send a caller who follows it to an absence
+  // this server invented. The show is named under 'show_name'.
+  const row = toSubtitleRow(record, { showId: null, readFrom: "record" });
   const notes: string[] = [READS_CATALOGUE_ONLY];
 
   if (row.release_match === "none") {

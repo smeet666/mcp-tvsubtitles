@@ -28,6 +28,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A release the site names in both its cells is carried once. The site fills
   the medium and the group with the same word often enough that carrying it
   twice read as two releases where there is one.
+- `title_id` names the show a row belongs to, and is null on a row read from a
+  record's own page, because that page names no show. It carried the subtitle's
+  own id there, which gave one field two meanings depending on the route that
+  produced the row and sent a caller who followed it to an absence this server
+  invented. The show is named under `show_name`.
+- A season's count of rows it could not read leaves out the two rows a season
+  table holds that are not episodes: the spacer, and the aggregate the site
+  offers so a reader can take a whole season at once. Counting those made
+  `skipped` report two unreadable episodes on every season.
 
 ## [0.2.0] - 2026-09-01
 

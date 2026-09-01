@@ -15,7 +15,14 @@ import { indentMarkerLines } from "../tvsubtitles/text.js";
 
 export const subtitleRowSchema = z.object({
   id: z.string().describe("Pass this to get_subtitle."),
-  title_id: z.string().describe("The show this belongs to."),
+  title_id: z
+    .string()
+    .nullable()
+    .describe(
+      "The show this belongs to, where the page it was read from names one. A record's own page names " +
+        "no show, so a row whose 'read_from' is 'record' carries null here and names the show under " +
+        "'show_name' instead.",
+    ),
   page_url: z.string().describe("The page a reader opens to download the file."),
   language: z.string().nullable().describe("The language as the site names it."),
   language_code: z
@@ -128,7 +135,8 @@ export function toIsoTimestamp(stamp: string | null, now = new Date()): string |
 export function toSubtitleRow(
   record: SubtitleRecord,
   context: {
-    showId: number;
+    /** The show the row belongs to, or null where the page named none. */
+    showId: number | null;
     season?: number;
     episode?: number;
     /** Which page produced this row, which decides what it can carry. */
@@ -146,7 +154,7 @@ export function toSubtitleRow(
 
   return {
     id: String(record.id),
-    title_id: String(context.showId),
+    title_id: context.showId === null ? null : String(context.showId),
     page_url: `https://www.tvsubtitles.net/subtitle-${record.id}.html`,
     language: language?.name ?? null,
     language_code: language?.code ?? null,

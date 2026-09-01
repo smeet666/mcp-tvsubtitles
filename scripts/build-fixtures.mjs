@@ -186,6 +186,27 @@ const seasonRow = (code, episodeId, title, amount, flags) =>
   </nobr></td>
 </tr>`;
 
+/**
+ * The two rows a season table holds that are not episodes.
+ *
+ * The site draws a spacer, and an aggregate row offering every episode's
+ * subtitles at once. Neither carries an episode code, and the aggregate links
+ * to addresses of a different shape, carrying two numbers where an episode's
+ * own page carries one.
+ */
+const seasonSpacer = `<tr align="middle" bgcolor="#ffffff"><td></td><td></td><td></td><td></td></tr>`;
+
+const seasonAggregate = (showId, season) =>
+  `<tr align="middle" bgcolor="#ffffff">
+  <td></td>
+  <td align=left style="padding: 0 4px;"><a href="episode-${showId}-${season}.html"><b>All episodes</b></a></td>
+  <td>12</td>
+  <td><nobr>
+    <a href="subtitle-${showId}-${season}-en.html"><img src="images/flags/en.gif" width="18" height="12" alt="en" border=0></a>&nbsp;
+    <a href="subtitle-${showId}-${season}-fr.html"><img src="images/flags/fr.gif" width="18" height="12" alt="fr" border=0></a>
+  </nobr></td>
+</tr>`;
+
 const seasonHeader = `<tr align="middle"><th bgcolor="#111111" width="8%"><b>#</b></th>
 <th bgcolor="#111111" width="40%"><b>Episode</b></th>
 <th bgcolor="#111111" width="7%"><b>Amount</b></th>
@@ -242,6 +263,18 @@ const seasonUnknownShow = seasonPage("", 1, "", []);
 
 /** A season past the last one: the real name, the real links, no rows. */
 const seasonPastLast = seasonPage("Harbour Lights", 9, seasonList(4210, [1, 2, 3], 9), []);
+
+/** A season served the way the site serves one: episodes, a spacer, an aggregate. */
+const seasonWithAggregate = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 3], 3), [
+  seasonRow("3x07", 52_118, "The Long Way Round", 5, [
+    { kind: "many", code: "en", target: 52_118 },
+    { kind: "one", code: "fr", target: 880_431 },
+  ]),
+  seasonRow("3x08", 52_119, "Slack Water", 3, [{ kind: "one", code: "en", target: 880_450 }]),
+  seasonRow("3x09", 52_121, "The Turning Tide", 1, [{ kind: "blank" }]),
+  seasonSpacer,
+  seasonAggregate(4210, 3),
+]);
 
 /* ---------------------------------------------------------------- episode */
 
@@ -773,6 +806,7 @@ const files = {
   "season-full.html": seasonFull,
   "season-unknown-show.html": seasonUnknownShow,
   "season-past-last.html": seasonPastLast,
+  "season-with-aggregate.html": seasonWithAggregate,
   "season-empty-coverage.html": seasonEmptyCoverage,
   "episode-one-language.html": episodeOneLanguage,
   "episode-many-languages.html": episodeManyLanguages,

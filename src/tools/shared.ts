@@ -119,9 +119,12 @@ export function toToolError(error: unknown): ToolResult {
           error instanceof Error ? error.message : String(error),
         );
 
-  const lines = [`[${known.code}] ${known.message}`];
+  // A refusal carries text from the site, a show's name among it, and it is
+  // read by the same eyes as an answer. It gets the same two defences: a line
+  // cannot be forged, and a line cannot be turned around.
+  const lines = [`[${known.code}] ${quoteMarkerLines(known.message)}`];
   if (known.details.hint) {
-    lines.push(`Hint: ${known.details.hint}`);
+    lines.push(`Hint: ${quoteMarkerLines(known.details.hint)}`);
   }
   return { content: [{ type: "text", text: lines.join("\n") }], isError: true };
 }

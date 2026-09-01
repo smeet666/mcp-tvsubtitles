@@ -173,6 +173,8 @@ export interface SearchRow {
 const SEARCH_ROW = /<a href="\/tvshow-(\d+)\.html">(.*?)<\/a>(.*?)(?=<li|<\/ul)/gs;
 /** The years the site writes inside a search row's link, after the name. */
 const SEARCH_YEARS = /^(.*?)\s*\((\d{4}(?:-\d{4})?)\)\s*$/;
+/** One item of the list a search is answered with, readable or not. */
+const SEARCH_ITEM = /<li[\s>]/g;
 const FLAG = /images\/flags\/([a-z]{2})\.gif/g;
 
 /**
@@ -214,6 +216,11 @@ export function parseSearchResults(html: string): { rows: SearchRow[]; dropped: 
     });
   }
 
+  // Every match is served as one item of the list, so the items count what the
+  // page holds and the reading above counts what could be read. A row the site
+  // did not finish writing disappears otherwise, under a note written to name it.
+  const present = [...html.matchAll(SEARCH_ITEM)].length;
+  dropped.unreadable = Math.max(0, present - (rows.length + dropped.payloads + dropped.unnamed));
   return { rows, dropped };
 }
 

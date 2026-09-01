@@ -101,7 +101,7 @@ const showsIndexNoFooter = showsIndex.replace(FOOTER, "");
 
 const searchHit = (id, name, years, codes) =>
   `<li style="font-size: 120%; font-weight:bold; margin:10px 0"><div style="">
-  <a href="/tvshow-${id}.html">${name} (${years})</a>&nbsp;&nbsp;&nbsp;
+  <a href="/tvshow-${id}.html">${name}${years === null ? "" : ` (${years})`}</a>&nbsp;&nbsp;&nbsp;
   ${codes
     .map(
       (code) =>
@@ -136,6 +136,17 @@ const searchMatches = searchPage([
 const searchCountGaps = searchPage([
   searchHit(4213, "Saltmarsh", "2016", ["en"]),
   searchHit(4299, "Tidewater", "2019-2021", ["en", "fr"]),
+]);
+
+/**
+ * A search answer holding an entry the site did not finish writing.
+ *
+ * The item is there, its link carries no show id, so nothing can be read from
+ * it. An index answer counts such a row; a search answer has to as well.
+ */
+const searchUnreadableRow = searchPage([
+  searchHit(4210, "Harbour Lights", "2011-2014", ["en"]),
+  `<li style="font-size: 120%; font-weight:bold; margin:10px 0"><div style=""><a href="/tvshow.html">Half A Name</a></div></li>`,
 ]);
 
 const searchEmpty = searchPage([]);
@@ -800,6 +811,126 @@ const subtitleLongComment = subtitlePage({
   ],
 });
 
+/* ----------------------------------------- pages written with cells missing */
+
+/**
+ * An index every row of which reads, so nothing is left out and counted.
+ *
+ * Row 3 prints no year, which is the same empty cell the episode and subtitle
+ * columns carry on other rows: the site published nothing there.
+ */
+const showsIndexClean = page(
+  "TVsubtitles.net - TV shows",
+  `<table>
+${indexHeader}
+${indexRow({ rank: 1, id: 4210, name: "Harbour Lights", seasons: 3, episodes: 28, subtitles: 412, year: "2011-2014" })}
+${indexRow({ rank: 2, id: 4211, name: "The Ninth Wave", seasons: 1, episodes: 8, subtitles: 61, year: "2019" })}
+${indexRow({ rank: 3, id: 4219, name: "Tidewater", seasons: 1, episodes: 6, subtitles: 30, year: "" })}
+</table>`,
+);
+
+/**
+ * A search dropping one row and returning one that names no year.
+ *
+ * One reason to leave a row out rather than two, and a show the site published
+ * without the years it usually writes inside the link.
+ */
+const searchSparse = searchPage([
+  searchHit(4106, "&quot; OR 1=1-- -", "2020", ["en"]),
+  searchHit(4299, "Tidewater", null, ["en"]),
+]);
+
+/** A search matching two shows the index carries no row for at all. */
+const searchTwoUncounted = searchPage([
+  searchHit(4299, "Tidewater", "2019-2021", ["en"]),
+  searchHit(4301, "Slack Water", "2020", ["en", "fr"]),
+]);
+
+/** A season the site lists among the show's own and prints no episode row for. */
+const seasonNoEpisodes = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 3], 3), []);
+
+/** A one-season show whose only season the site prints no episode row for. */
+const seasonOneNoEpisodes = seasonPage("Slack Water", 1, seasonList(4220, [1], 1), []);
+
+/** A one-season show asked for a season past the one it holds. */
+const seasonOnePastLast = seasonPage("Slack Water", 2, seasonList(4220, [1], 2), []);
+
+/** A season page with no paragraph of season links on it at all. */
+const seasonNoDescription = page(
+  `TVsubtitles.net - Subtitles "Harbour Lights" season 3`,
+  `<h2>Harbour Lights</h2>
+<table>
+${seasonHeader}
+${seasonRow("3x07", 52_118, "The Long Way Round", 5, [{ kind: "one", code: "en", target: 880_431 }])}
+</table>`,
+);
+
+/** A season row the site published with its episode title left blank. */
+const seasonSparse = seasonPage("Harbour Lights", 4, seasonList(4210, [1, 2, 3, 4], 4), [
+  seasonRow("4x01", 52_130, "", 2, [{ kind: "one", code: "en", target: 880_450 }]),
+]);
+
+/**
+ * An episode listing written with cells the site usually fills left out.
+ *
+ * The heading names no episode title. The first block carries no heading line,
+ * so it names no language and no release and carries none of the labelled
+ * cells. The second carries its release only inside the brackets of its
+ * heading, where a row that was cut for a release states it.
+ */
+const episodeSparse = episodePage(
+  "TVsubtitles.net - Subtitles for Harbour Lights 4x01",
+  "Harbour Lights 4x01</b>&nbsp; <b></b> (Season 4 Episode 1)",
+  [
+    `<a href="/subtitle-880450.html"><div title="Download subtitles" class="subtitlen">
+  <div style="float:right; margin:0 2px;"><span style="color:black; font-weight:bold">
+    <span style="color:red">0</span>/<span style="color:green">0</span></span></div>
+</div></a>`,
+    `<a href="/subtitle-880451.html"><div title="Download en subtitles" class="subtitlen">
+  <div style="float:right; margin:0 2px;"><span style="color:black; font-weight:bold">
+    <span style="color:red">0</span>/<span style="color:green">1</span></span></div>
+  <h5 style="width:600px;"><img src="images/flags/en.gif" width="18" height="12" alt="" border=0 hspace=4 align=absmiddle>Harbour Lights 4x01 (HDTV.FQM)</h5>
+${cell("release", "release.gif", null, 110)}
+${cell("uploaded", "time.png", "<small>02.01.15 10:00:00</small>", 70)}
+${cell("downloaded", "downloads.png", "5", 100)}
+</div></a>`,
+  ],
+);
+
+/** An episode listing served without the body element the site wraps it in. */
+const episodeHeadless = `<b>Harbour Lights 3x07</b>&nbsp; <b>The Long Way Round</b> (Season 3 Episode 7)
+<b>Subtitles for this episode:</b>
+${episodeBlock({
+  id: 880_431,
+  code: "en",
+  heading: "Harbour Lights 3x07 (HDTV.LOL)",
+  rip: "HDTV",
+  release: "LOL",
+  uploaded: "04.02.14 09:12:30",
+  author: "rivermouth",
+  downloads: "318",
+  bad: 0,
+  good: 2,
+})}
+`;
+
+/** A record whose title names a language the site's own flag table never draws. */
+const subtitleUnknownLanguage = subtitlePage({
+  id: 880_473,
+  title:
+    'TVsubtitles.net - Download esperanto subtitles for Harbour Lights 3x07 (season 3 episode 07 - "The Long Way Round")',
+  fields: [
+    ["episode title", "The Long Way Round"],
+    ["episode number", "Season 3 episode 7"],
+    ["rip", "HDTV"],
+    ["release", "LOL"],
+    ["filename", "Harbour Lights - 3x07.srt"],
+    ["size", "21.4 kb"],
+    ["uploaded", "04.02.14 09:12:30"],
+    ["number of downloads", "318"],
+  ],
+});
+
 /** Where the site sends a reader who asks for a subtitle id it does not hold. */
 const frontPage = page(
   "TVsubtitles.net - TV Subtitles",
@@ -817,6 +948,7 @@ const files = {
   "season-broken-row.html": seasonBrokenRow,
   "search-matches.html": searchMatches,
   "search-count-gaps.html": searchCountGaps,
+  "search-unreadable-row.html": searchUnreadableRow,
   "search-empty.html": searchEmpty,
   "season-full.html": seasonFull,
   "season-unknown-show.html": seasonUnknownShow,
@@ -849,6 +981,17 @@ const files = {
   "subtitle-no-language.html": subtitleNoLanguage,
   "subtitle-no-rating.html": subtitleNoRating,
   "subtitle-long-comment.html": subtitleLongComment,
+  "shows-index-clean.html": showsIndexClean,
+  "search-sparse.html": searchSparse,
+  "season-no-episodes.html": seasonNoEpisodes,
+  "season-one-no-episodes.html": seasonOneNoEpisodes,
+  "season-one-past-last.html": seasonOnePastLast,
+  "search-two-uncounted.html": searchTwoUncounted,
+  "season-no-description.html": seasonNoDescription,
+  "season-sparse.html": seasonSparse,
+  "episode-sparse.html": episodeSparse,
+  "episode-headless.html": episodeHeadless,
+  "subtitle-unknown-language.html": subtitleUnknownLanguage,
   "front-page.html": frontPage,
   "unreadable.html": unreadable,
 };

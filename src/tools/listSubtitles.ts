@@ -239,6 +239,15 @@ function coverage(
       `${rendered.length} of the ${episodes.length} episodes are rendered here. Raise 'limit' for the rest.`,
     );
   }
+  // The client counts what it could not read on every route; saying so is the
+  // tool's part, and without it a total naming episodes counts only the
+  // readable ones while reading as though it counted them all.
+  const unread = context.read.skipped ?? 0;
+  if (unread > 0) {
+    notes.push(
+      `${unread} ${unread === 1 ? "row of this season's table was" : "rows of this season's table were"} written too incompletely to read, so ${unread === 1 ? "one episode is" : "those episodes are"} missing from what follows and from the total beside it.`,
+    );
+  }
   notes.push(
     "These rows say which languages hold something, not what each file is. Name an 'episode' to read its records.",
   );
@@ -287,6 +296,81 @@ function coverage(
   );
 }
 
+/**
+ * The records one episode holds, honouring a language when one was named.
+ *
+ * Two things decide what comes back. A narrowing that fails is set aside
+ * exactly like one that comes back empty, because a filter cannot manufacture
+ * an absence and the failure of a page this server chose to read is not an
+ * answer about the episode. And what the answer says about a language is
+ * decided on the rows themselves: the site's page for a language is trusted for
+ * the rows it holds, never for the question it was given, so no row of another
+ * language is rendered under a filter naming this one.
+ */
+async function readEpisode(
+  client: TvSubtitlesClient,
+  episodeId: number,
+  language: ReturnType<typeof requireLanguage> | undefined,
+  seasonCached: boolean,
+): Promise<{
+  rows: SubtitleRecord[];
+  skipped: number;
+  fromMemory: boolean;
+  narrowingFailed: boolean;
+  setAside: boolean;
+  notes: string[];
+}> {
+  const notes: string[] = [];
+  let rows: SubtitleRecord[] = [];
+  let skipped = 0;
+  let narrowingFailed = false;
+  // True only while every page this needed came from memory.
+  let fromMemory = seasonCached;
+
+  if (language) {
+    try {
+      const narrowed = await client.listEpisodeSubtitles(episodeId, language);
+      skipped += narrowed.skipped ?? 0;
+      fromMemory &&= narrowed.cached;
+      rows = narrowed.data.filter((record) => record.siteCode === language.siteCode);
+    } catch {
+      narrowingFailed = true;
+    }
+  } else {
+    const whole = await client.listEpisodeSubtitles(episodeId);
+    skipped += whole.skipped ?? 0;
+    fromMemory &&= whole.cached;
+    rows = whole.data;
+  }
+
+  if (!language || rows.length > 0) {
+    return { rows, skipped, fromMemory, narrowingFailed, setAside: false, notes };
+  }
+
+  // Read again without the narrowing. A failure here is the episode's own page
+  // failing, which is an answer about the episode and is reported.
+  const whole = await client.listEpisodeSubtitles(episodeId);
+  skipped += whole.skipped ?? 0;
+  fromMemory &&= whole.cached;
+  const held = whole.data.filter((record) => record.siteCode === language.siteCode);
+
+  if (held.length > 0) {
+    notes.push(
+      `The site's page for that language ${narrowingFailed ? "could not be read" : "came back empty"} while the episode's own page holds ${held.length === 1 ? "a subtitle" : "subtitles"} in it. These were read from the episode's page.`,
+    );
+    return { rows: held, skipped, fromMemory, narrowingFailed, setAside: false, notes };
+  }
+
+  if (whole.data.length === 0) {
+    return { rows, skipped, fromMemory, narrowingFailed, setAside: false, notes };
+  }
+
+  notes.push(
+    `This episode holds no subtitle in that language${narrowingFailed ? ", whose page could not be read either" : ""}, so the language was set aside and every language is shown.`,
+  );
+  return { rows: whole.data, skipped, fromMemory, narrowingFailed, setAside: true, notes };
+}
+
 async function records(
   client: TvSubtitlesClient,
   page: SeasonRead["data"],
@@ -312,33 +396,17 @@ async function records(
     );
   }
 
-  const read = await client.listEpisodeSubtitles(row.episodeId, language);
+  const read = await readEpisode(client, row.episodeId, language, context.cached);
+  const { rows, skipped, fromMemory, narrowingFailed } = read;
   const dropped: string[] = [];
-  let rows: SubtitleRecord[] = read.data;
-
-  if (language && rows.length === 0) {
-    // The episode exists, so an empty answer here is the language holding
-    // nothing rather than the episode being absent. It is read again without
-    // the narrowing so the answer can say what was set aside.
-    const whole = await client.listEpisodeSubtitles(row.episodeId);
-    // The site keeps a page per language beside the episode's own page, and the
-    // two can disagree. What the answer says about the language is decided on
-    // the rows it is about to render, never on the read that came back empty:
-    // claiming an absence while displaying rows in that very language would
-    // contradict the payload beside the note.
-    const held = whole.data.filter((record) => record.siteCode === language.siteCode);
-    if (held.length > 0) {
-      rows = held;
-      notes.push(
-        `The site's page for that language came back empty while the episode's own page holds ${held.length === 1 ? "a subtitle" : "subtitles"} in it. These were read from the episode's page.`,
-      );
-    } else if (whole.data.length > 0) {
-      rows = whole.data;
-      dropped.push(...applied.splice(0));
-      notes.push(
-        "This episode holds no subtitle in that language, so the language was set aside and every language is shown.",
-      );
-    }
+  notes.push(...read.notes);
+  if (read.setAside) {
+    dropped.push(...applied.splice(0));
+  }
+  if (skipped > 0) {
+    notes.push(
+      `${skipped} ${skipped === 1 ? "block" : "blocks"} of this episode's page named no record and could not be read, so ${skipped === 1 ? "it is" : "they are"} missing from what follows.`,
+    );
   }
 
   const rendered = rows.slice(0, limit);
@@ -384,7 +452,7 @@ async function records(
       total_counts: "rows_served" as const,
       filters_applied: applied,
       filters_dropped: dropped,
-      cached: context.cached && read.cached,
+      cached: fromMemory && !narrowingFailed,
       source: SOURCE_NAME,
       notes,
     },

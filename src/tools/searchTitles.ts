@@ -282,7 +282,18 @@ export async function runSearchTitles(
   // a page of several hundred kilobytes and a second request on the one queue
   // every tool waits behind.
   const counted = parsed.data.with_counts === true;
-  const counts = counted ? await catalogueCounts(client) : null;
+  // The search has already succeeded by here. Reading the index is an addition
+  // to that answer, so failing to read it costs the counts and nothing else:
+  // letting it raise would destroy a result the site had given.
+  let counts: Map<number, IndexCounts> | null = null;
+  let countsUnread: string | null = null;
+  if (counted) {
+    try {
+      counts = await catalogueCounts(client);
+    } catch (error) {
+      countsUnread = error instanceof Error ? error.message : String(error);
+    }
+  }
   let uncounted = 0;
 
   const results = rendered.map((row) => {
@@ -307,7 +318,11 @@ export async function runSearchTitles(
     };
   });
 
-  if (counted) {
+  if (counted && countsUnread !== null) {
+    notes.push(
+      `The counts were asked for and the site's catalogue index could not be read, so every count here is unknown rather than none. The read failed with: ${countsUnread}`,
+    );
+  } else if (counted) {
     notes.push(
       "Each count is a figure the site publishes on its catalogue index, counting every season of that show together. None of them is the number of rows this search served.",
     );
@@ -336,7 +351,7 @@ export async function runSearchTitles(
       result_count: results.length,
       total_available: kept.length,
       total_counts: "rows_served" as const,
-      counts_scope: counted ? ("whole_show" as const) : null,
+      counts_scope: counted && countsUnread === null ? ("whole_show" as const) : null,
       filters_applied: applied,
       filters_dropped: dropped,
       cached: read.cached,

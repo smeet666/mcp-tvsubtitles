@@ -218,6 +218,13 @@ async function oneShow(
     `Measured over season ${page.season}, the ${season === undefined ? "newest season the site holds" : "season asked for"}. ${holds}`,
     "A count is episodes of that season holding the language, not files: an episode row says which languages hold something and not how many files each one holds.",
   ];
+  // A count of episodes is only as whole as the season it was counted over.
+  const unread = read.skipped ?? 0;
+  if (unread > 0) {
+    notes.push(
+      `${unread} ${unread === 1 ? "row of this season's table was" : "rows of this season's table were"} written too incompletely to read, so every count below is measured over the episodes that could be read rather than over the whole season.`,
+    );
+  }
   const divergences = languages.length > 0 ? isoNote(languages) : null;
   if (divergences !== null) {
     notes.push(divergences);

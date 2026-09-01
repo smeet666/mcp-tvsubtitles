@@ -58,7 +58,7 @@ claude mcp add tvsubtitles -- npx -y mcp-tvsubtitles
   "mcpServers": {
     "tvsubtitles": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:1.0.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:1.0.1"]
     }
   }
 }
@@ -332,7 +332,7 @@ claude mcp add tvsubtitles -- npx -y mcp-tvsubtitles
   "mcpServers": {
     "tvsubtitles": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:1.0.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:1.0.1"]
     }
   }
 }

@@ -4,6 +4,32 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-09-01
+
+### Fixed
+
+- A narrowing that fails is set aside like one that comes back empty. The
+  site keeps a page per language beside an episode's own page, and when that
+  page could not be read the whole answer was lost, reporting an episode that
+  exists and holds subtitles as absent.
+- No row of another language is rendered under a filter naming this one. The
+  page for a language is trusted for the rows it holds rather than for the
+  question it was given, so `filters_applied` cannot name a language its own
+  payload contradicts.
+- A season answer and a language answer report the rows they could not read.
+  The client counted them on every route and only the search said so, which
+  left a total of episodes counting the readable ones while reading as though
+  it counted them all.
+- A search answer counts the entries the site did not finish writing, as an
+  index answer does. They disappeared without a word, under a note written to
+  name them.
+- Asking for the catalogue counts no longer takes a successful search down
+  with it. The counts are an addition to an answer the site had already given,
+  so failing to read the index costs the counts alone and the answer says so.
+- A refusal carries the same two defences an answer does. It quotes a line
+  shaped like one this server writes and takes out the characters that reverse
+  a line's direction, both of which reach it through a show's name.
+
 ## [1.0.0] - 2026-09-01
 
 ### Changed
@@ -95,6 +121,7 @@ First release.
 - The client layer published on the `./client` subpath, with its pacing, its
   store and its error codes.
 
+[1.0.1]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v1.0.1
 [1.0.0]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v1.0.0
 [0.2.0]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v0.2.0
 [0.1.0]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v0.1.0

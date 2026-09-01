@@ -1,6 +1,6 @@
 {
   "name": "mcp-tvsubtitles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one subtitle's record. No API key required.",
   "keywords": [
     "mcp",
@@ -58,6 +58,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "pretest": "npm run build",
+    "precoverage": "npm run build",
     "test": "vitest run test/unit",
     "coverage": "vitest run test/unit --coverage",
     "test:live": "vitest run test/live --testTimeout=90000",

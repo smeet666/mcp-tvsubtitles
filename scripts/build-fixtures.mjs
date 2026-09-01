@@ -264,6 +264,21 @@ const seasonUnknownShow = seasonPage("", 1, "", []);
 /** A season past the last one: the real name, the real links, no rows. */
 const seasonPastLast = seasonPage("Harbour Lights", 9, seasonList(4210, [1, 2, 3], 9), []);
 
+/**
+ * A show holding one season, in languages whose codes are the ISO ones.
+ *
+ * Both halves matter to what an answer may say: there is no other season to
+ * warn a reader about, and there is no divergence between the site's codes and
+ * ISO 639-1 to enumerate.
+ */
+const seasonOneOnly = seasonPage("Slack Water", 1, seasonList(4220, [1], 1), [
+  seasonRow("1x01", 53_001, "First Light", 2, [
+    { kind: "one", code: "en", target: 881_001 },
+    { kind: "one", code: "fr", target: 881_002 },
+  ]),
+  seasonRow("1x02", 53_002, "Second Light", 1, [{ kind: "one", code: "en", target: 881_003 }]),
+]);
+
 /** A season served the way the site serves one: episodes, a spacer, an aggregate. */
 const seasonWithAggregate = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 3], 3), [
   seasonRow("3x07", 52_118, "The Long Way Round", 5, [
@@ -807,6 +822,7 @@ const files = {
   "season-unknown-show.html": seasonUnknownShow,
   "season-past-last.html": seasonPastLast,
   "season-with-aggregate.html": seasonWithAggregate,
+  "season-one-only.html": seasonOneOnly,
   "season-empty-coverage.html": seasonEmptyCoverage,
   "episode-one-language.html": episodeOneLanguage,
   "episode-many-languages.html": episodeManyLanguages,

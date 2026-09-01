@@ -37,6 +37,17 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   table holds that are not episodes: the spacer, and the aggregate the site
   offers so a reader can take a whole season at once. Counting those made
   `skipped` report two unreadable episodes on every season.
+- An episode page in a shape this server cannot read comes back as
+  `parse_failure`. It came back as `not_found`, which reported the site as
+  holding no such episode on the strength of a reading that failed.
+- An uploader's comment travels in the structured payload exactly as the site
+  published it. A space was being inserted in front of a line opening `Note:` or
+  `Source:`, which is a defence the rendered block already carries and which the
+  payload is not the place for.
+- A language answer names the codes that differ from ISO 639-1 only where its
+  own languages carry one, and warns about a show's other seasons only where it
+  holds others. It announced none and enumerated nothing, and told a show with
+  one season to look through its others.
 
 ## [0.2.0] - 2026-09-01
 

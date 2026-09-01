@@ -11,7 +11,6 @@
 import { z } from "zod";
 import { languageBySiteCode } from "../tvsubtitles/languages.js";
 import type { SubtitleRecord } from "../tvsubtitles/parse.js";
-import { indentMarkerLines } from "../tvsubtitles/text.js";
 
 export const subtitleRowSchema = z.object({
   id: z.string().describe("Pass this to get_subtitle."),
@@ -174,9 +173,10 @@ export function toSubtitleRow(
     rating: { good: record.ratedGood, bad: record.ratedBad },
     file_name: record.fileName,
     size_text: record.sizeText,
-    // An uploader's line reaches a model through this server's answers, so a
-    // line shaped like one this server writes is shifted off the margin.
-    comment: record.comment === null ? null : indentMarkerLines(record.comment),
+    // Kept as the site published it. A line shaped like one this server writes
+    // is defended against where a reader could be fooled by it, which is the
+    // rendered block, and the payload is not that place.
+    comment: record.comment,
     source: "tvsubtitles.net",
   };
 }

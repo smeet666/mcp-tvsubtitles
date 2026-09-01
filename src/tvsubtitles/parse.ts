@@ -383,6 +383,8 @@ const ROW_FLAG = /<h5[^>]*>\s*<img src="images\/flags\/([a-z]{2})\.gif/;
 const TRAILING_BRACKET = /\(([^()]*)\)\s*$/;
 const LISTING_FIELD = (name: string) =>
   new RegExp(`alt="${name}"[^>]*>(?:\\s*<img[^>]*>)?(.*?)</p>`, "s");
+/** The heading the site puts on every episode page, whether or not it holds one. */
+const EPISODE_PAGE = /Subtitles for this episode/i;
 const EPISODE_HEADING =
   /(\d+)x(\d+)\s*(?:&nbsp;|\s)*(.*?)\s*\(Season\s+(\d+)\s+Episode\s+(\d+)\)/is;
 
@@ -399,7 +401,15 @@ export function parseEpisodeListing(
   // Read from the body alone. The head titles the page with the same episode
   // number, and a heading matched there runs on through the navigation before it
   // reaches the brackets that close it, taking the whole chrome in as a title.
-  const heading = EPISODE_HEADING.exec(plainText(bodyOf(html).slice(0, 8000)));
+  const pageBody = bodyOf(html);
+  // The site heads every episode page this way, the one it answers an id it does
+  // not hold with included. Its absence is what tells a page in a shape this
+  // cannot read from a page saying there is no such episode, and reporting the
+  // first as the second would state an absence nobody established.
+  if (!EPISODE_PAGE.test(pageBody)) {
+    throw parseFailure("An episode page came back in a shape this server cannot read.");
+  }
+  const heading = EPISODE_HEADING.exec(plainText(pageBody.slice(0, 8000)));
   // An episode id the site does not hold is answered with this page carrying
   // blanks where the numbers go, which is the absence rather than a failure.
   if (!heading) {

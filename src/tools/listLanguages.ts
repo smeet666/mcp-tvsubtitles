@@ -94,12 +94,20 @@ export const listLanguagesOutputShape = {
 const CATALOGUE_NOTE =
   "These are the languages the site catalogues, whatever any one show holds. Pass a show id to read what a show holds.";
 
-/** The note every answer carries, naming the codes that are not the ISO ones. */
-function isoNote(languages: readonly { site_code: string; code: string | null }[]): string {
+/**
+ * The note naming the codes of this answer that are not the ISO ones.
+ *
+ * Null where none of them is, because a note announcing none and enumerating
+ * nothing tells a reader something the answer does not hold.
+ */
+function isoNote(languages: readonly { site_code: string; code: string | null }[]): string | null {
   const differing = languages.filter(
     (language) => language.code !== null && language.code.split("-")[0] !== language.site_code,
   );
-  return `${differing.length} of the site's codes differ from ISO 639-1: ${differing
+  if (differing.length === 0) {
+    return null;
+  }
+  return `${differing.length === 1 ? "One of" : `${differing.length} of`} the site's codes differ${differing.length === 1 ? "s" : ""} from ISO 639-1: ${differing
     .map((language) => `${language.site_code} is ${language.code}`)
     .join(", ")}.`;
 }
@@ -129,7 +137,8 @@ export async function runListLanguages(
 
 function wholeCatalogue(): ToolResult {
   const languages = catalogue();
-  const notes = [CATALOGUE_NOTE, isoNote(languages)];
+  const divergences = isoNote(languages);
+  const notes = divergences === null ? [CATALOGUE_NOTE] : [CATALOGUE_NOTE, divergences];
   const body = [
     "Languages tvsubtitles.net catalogues subtitles in.",
     ...languages.map(
@@ -186,12 +195,19 @@ async function oneShow(
     .map((language) => ({ ...language, count: held.get(language.site_code) ?? null }))
     .sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name));
 
+  // The warning about other seasons is written only where there are others: a
+  // show holding one season has none for a reader to go looking through.
+  const holds =
+    page.seasonsAvailable.length === 1
+      ? "This show holds one season."
+      : `This show holds seasons ${page.seasonsAvailable.join(", ")}, and another season may hold languages this one does not.`;
   const notes = [
-    `Measured over season ${page.season}, the ${season === undefined ? "newest season the site holds" : "season asked for"}. This show holds ${page.seasonsAvailable.length === 1 ? "one season" : `seasons ${page.seasonsAvailable.join(", ")}`}, and another season may hold languages this one does not.`,
+    `Measured over season ${page.season}, the ${season === undefined ? "newest season the site holds" : "season asked for"}. ${holds}`,
     "A count is episodes of that season holding the language, not files: an episode row says which languages hold something and not how many files each one holds.",
   ];
-  if (languages.length > 0) {
-    notes.push(isoNote(languages));
+  const divergences = languages.length > 0 ? isoNote(languages) : null;
+  if (divergences !== null) {
+    notes.push(divergences);
   }
 
   const body =

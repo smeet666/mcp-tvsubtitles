@@ -67,7 +67,7 @@ export async function runGetSubtitle(
   const record = read.data;
   // The record names no show id of its own, so the row is credited to the
   // subtitle rather than to a show this call never established.
-  const row = toSubtitleRow(record, { showId: id });
+  const row = toSubtitleRow(record, { showId: id, readFrom: "record" });
   const notes: string[] = [READS_CATALOGUE_ONLY];
 
   if (row.release_match === "none") {

@@ -489,6 +489,28 @@ const subtitleNoRelease = subtitlePage({
   ],
 });
 
+/**
+ * The medium and the group named with the same word.
+ *
+ * The site prints both cells, so both are true, and a reader taking them for
+ * two releases would see one release counted twice.
+ */
+const subtitleSameRelease = subtitlePage({
+  id: 880_480,
+  title:
+    'TVsubtitles.net - Download greek subtitles for Harbour Lights 3x07 (season 3 episode 07 - "The Long Way Round")',
+  fields: [
+    ["episode title", "The Long Way Round"],
+    ["episode number", "Season 3 episode 7"],
+    ["rip", "DVDRip"],
+    ["release", "DVDRip"],
+    ["filename", "Harbour Lights - 3x07 - The Long Way Round.DVDRip.gr.srt"],
+    ["size", "17.7 kb"],
+    ["uploaded", "11.02.14 21:04:12"],
+    ["number of downloads", "58"],
+  ],
+});
+
 /** A comment the uploader left. */
 const subtitleComment = subtitlePage({
   id: 880_440,
@@ -762,6 +784,7 @@ const files = {
   "subtitle-full.html": subtitleFull,
   "subtitle-no-author.html": subtitleNoAuthor,
   "subtitle-no-release.html": subtitleNoRelease,
+  "subtitle-same-release.html": subtitleSameRelease,
   "subtitle-comment.html": subtitleComment,
   "subtitle-comment-forging.html": subtitleCommentForging,
   "subtitle-bad-stamp.html": subtitleBadStamp,

@@ -1,9 +1,9 @@
 /**
- * The site publishes a subtitle count per show, and it publishes it on its
- * index rather than on the page a search answers with. Reading it is therefore
- * a second request over a large page, which is why a caller asks for it.
+ * The site publishes its per-show counts on its index rather than on the page a
+ * search answers with. Reading them is therefore a second request over a large
+ * page, which is why a caller asks for them.
  *
- * What these tests hold is the honesty of the figure: it is the site's own,
+ * What these tests hold is the honesty of the figures: they are the site's own,
  * counted over the whole show, and a row the index says nothing about keeps a
  * null rather than borrowing a number from anywhere else.
  */
@@ -28,7 +28,7 @@ type Args = Parameters<typeof runSearchTitles>[1];
 
 interface Payload {
   results: Array<{ id: string; title: string; subtitle_count: number | null }>;
-  subtitle_count_scope: string | null;
+  counts_scope: string | null;
   notes: string[];
 }
 
@@ -76,7 +76,7 @@ describe("the subtitle count a search can be asked for", () => {
 
   it("is the site's own figure, read off the index, when it is asked for", async () => {
     const where = searching("search-matches");
-    const { payload } = await run(where, { query: "Harbour", with_subtitle_count: true });
+    const { payload } = await run(where, { query: "Harbour", with_counts: true });
 
     const harbour = payload.results.find((row) => row.title === "Harbour Lights");
     expect(harbour?.subtitle_count, "the index publishes 412 for this show").toBe(412);
@@ -84,14 +84,14 @@ describe("the subtitle count a search can be asked for", () => {
 
   it("says what the figure counts, so it is not read as this search's total", async () => {
     const where = searching("search-matches");
-    const { payload } = await run(where, { query: "Harbour", with_subtitle_count: true });
+    const { payload } = await run(where, { query: "Harbour", with_counts: true });
 
-    expect(payload.subtitle_count_scope).toBe("whole_show");
+    expect(payload.counts_scope).toBe("whole_show");
   });
 
   it("stays null where the index printed nothing, rather than reading as none", async () => {
     const where = searching("search-count-gaps");
-    const { payload } = await run(where, { query: "marsh", with_subtitle_count: true });
+    const { payload } = await run(where, { query: "marsh", with_counts: true });
 
     const empty = payload.results.find((row) => row.title === "Saltmarsh");
     expect(empty?.subtitle_count, "the index leaves this show's count cell empty").toBeNull();
@@ -99,7 +99,7 @@ describe("the subtitle count a search can be asked for", () => {
 
   it("stays null for a show the index does not carry, and says how many", async () => {
     const where = searching("search-count-gaps");
-    const { payload } = await run(where, { query: "marsh", with_subtitle_count: true });
+    const { payload } = await run(where, { query: "marsh", with_counts: true });
 
     const absent = payload.results.find((row) => row.title === "Tidewater");
     expect(absent, "the corpus offers no row the index is silent about").toBeDefined();
@@ -112,7 +112,7 @@ describe("the subtitle count a search can be asked for", () => {
 
   it("reaches the reader of the text block, not only the payload", async () => {
     const where = searching("search-matches");
-    const { result } = await run(where, { query: "Harbour", with_subtitle_count: true });
+    const { result } = await run(where, { query: "Harbour", with_counts: true });
 
     expect(textOf(result)).toContain("412");
   });
@@ -125,7 +125,7 @@ describe("the subtitle count a search can be asked for", () => {
       fetchImpl: where.impl,
     });
     const refusal = await fails(
-      runSearchTitles(client, { query: "Harbour", with_subtitle_counts: true } as unknown as Args),
+      runSearchTitles(client, { query: "Harbour", with_countz: true } as unknown as Args),
     );
     expect(refusal.code).toBe("invalid_input");
   });

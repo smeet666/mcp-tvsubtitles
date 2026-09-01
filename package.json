@@ -1,6 +1,6 @@
 {
   "name": "mcp-tvsubtitles",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one subtitle's record. No API key required.",
   "keywords": [
     "mcp",

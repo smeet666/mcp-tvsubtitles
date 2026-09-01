@@ -326,7 +326,12 @@ async function records(
   notes.push(READS_CATALOGUE_ONLY);
 
   const results = rendered.map((record) =>
-    toSubtitleRow(record, { showId: page.showId, season: page.season, episode }),
+    toSubtitleRow(record, {
+      showId: page.showId,
+      season: page.season,
+      episode,
+      readFrom: "listing",
+    }),
   );
 
   const body =

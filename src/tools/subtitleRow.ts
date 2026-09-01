@@ -31,6 +31,13 @@ export const subtitleRowSchema = z.object({
       "The video releases as published, in the case the uploader typed them. The site states the " +
         "medium and the release group separately, and both appear here when it published them.",
     ),
+  read_from: z
+    .enum(["listing", "record"])
+    .describe(
+      "Which page this row was read from. A listing carries no file name, no size and no comment, " +
+        "because the site prints those on a record's own page alone: read a null on one of the three as " +
+        "unread here rather than as something the site does not publish.",
+    ),
   release_match: z
     .enum(["stated", "inferred", "none"])
     .describe(
@@ -120,13 +127,22 @@ export function toIsoTimestamp(stamp: string | null, now = new Date()): string |
 /** Turn a record the site published into the shape every answer carries. */
 export function toSubtitleRow(
   record: SubtitleRecord,
-  context: { showId: number; season?: number; episode?: number },
+  context: {
+    showId: number;
+    season?: number;
+    episode?: number;
+    /** Which page produced this row, which decides what it can carry. */
+    readFrom: "listing" | "record";
+  },
 ): SubtitleRow {
   const language = record.siteCode === null ? undefined : languageBySiteCode(record.siteCode);
-  // Both are the site's own words for the version, kept in the case it printed
-  // them: the release group is the token a caller matches a video file by, and
-  // folding its case would break the one thing it is good for.
-  const releases = [record.rip, record.release].filter((part): part is string => part !== null);
+  // Both cells are the site's own words for the version, kept in the case it
+  // printed them: the release group is the token a caller matches a video file
+  // by, and folding its case would break the one thing it is good for. The site
+  // fills both with the same word often enough that carrying it twice would
+  // read as two releases where there is one, so the pair is deduplicated in the
+  // order the page printed it.
+  const releases = [...new Set([record.rip, record.release].filter((part) => part !== null))];
 
   return {
     id: String(record.id),
@@ -134,6 +150,7 @@ export function toSubtitleRow(
     page_url: `https://www.tvsubtitles.net/subtitle-${record.id}.html`,
     language: language?.name ?? null,
     language_code: language?.code ?? null,
+    read_from: context.readFrom,
     releases,
     release_match: releases.length > 0 ? "stated" : "none",
     season: record.season ?? context.season ?? null,

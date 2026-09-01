@@ -17,10 +17,10 @@ export const searchTitlesDescription =
   "Search tvsubtitles.net for a television series by name. The site catalogues television only, so " +
   "'media_type' takes 'tv' or 'any' and a film is refused rather than answered with an absence. Each " +
   "row carries the id the other tools take, the years the site publishes for the show, and the " +
-  "languages it draws a flag for. Pass 'with_subtitle_count' for the number of subtitles the site " +
-  "holds per show: it publishes that figure on its catalogue index rather than on the page a search " +
-  "answers with, so reading it costs one further request over a large page, and the figure counts " +
-  "every season of the show together. Show ids come from here and are never built by hand.";
+  "languages it draws a flag for. Pass 'with_counts' for how many subtitles, episodes and seasons the " +
+  "site holds per show: it publishes those three on its catalogue index rather than on the page a " +
+  "search answers with, so reading them costs one further request over a large page, and each counts " +
+  "the whole show. Show ids come from here and are never built by hand.";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -56,13 +56,13 @@ export const searchTitlesInput = {
     .max(MAX_LIMIT)
     .optional()
     .describe(`Rows to render, ${DEFAULT_LIMIT} by default and ${MAX_LIMIT} at most.`),
-  with_subtitle_count: z
+  with_counts: z
     .boolean()
     .optional()
     .describe(
-      "Read each row's subtitle count from the site's catalogue index, which costs one further request over a " +
-        "page of several hundred kilobytes. The figure counts the whole show rather than this search, and a row " +
-        "the index says nothing about keeps a null.",
+      "Read each row's subtitle, episode and season counts from the site's catalogue index, which costs one " +
+        "further request over a page of several hundred kilobytes. Each figure counts the whole show rather than " +
+        "this search, each is read on its own, and a cell the index leaves empty keeps a null.",
     ),
 } as const;
 
@@ -89,8 +89,22 @@ export const searchTitlesOutputShape = {
         .nullable()
         .describe(
           "The site's own count of the subtitles it holds for this show, read from its catalogue index when " +
-            "'with_subtitle_count' asked for it. Null without that argument, and null where the index printed " +
-            "nothing or carries no row for the show.",
+            "'with_counts' asked for it. Null without that argument, and null where the index printed nothing " +
+            "or carries no row for the show.",
+        ),
+      episode_count: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "The episodes the index counts for this show, on the same terms as 'subtitle_count'.",
+        ),
+      season_count: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "The seasons the index counts for this show, on the same terms as 'subtitle_count'.",
         ),
       languages: z
         .array(z.string())
@@ -107,12 +121,12 @@ export const searchTitlesOutputShape = {
   total_counts: z
     .literal("rows_served")
     .describe("What 'total_available' counted: the rows this one search came back with."),
-  subtitle_count_scope: z
+  counts_scope: z
     .literal("whole_show")
     .nullable()
     .describe(
-      "What each row's 'subtitle_count' counts, when one was read: every season of that show together, which is " +
-        "a different figure from the rows this search served. Null when no count was asked for.",
+      "What the three counts count, when they were read: every season of that show together, which is a " +
+        "different figure from the rows this search served. Null when no counts were asked for.",
     ),
   filters_applied: z.array(z.string()),
   filters_dropped: z.array(z.string()),
@@ -134,20 +148,29 @@ function countPhrase(count: number | null, asked: boolean): string {
   return asked ? ", subtitle count unknown" : "";
 }
 
+/** The three figures one row of the catalogue index carries. */
+interface IndexCounts {
+  subtitles: number | null;
+  episodes: number | null;
+  seasons: number | null;
+}
+
 /**
- * The count the site publishes per show, keyed by the id a search hands back.
+ * The counts the site publishes per show, keyed by the id a search hands back.
  *
- * The index is the one page carrying it, and a show it says nothing about is
- * left out of the map rather than entered as zero: the caller has to be able to
- * tell a show with no subtitles from one the index never mentioned.
+ * The index is the one page carrying them, and a show it says nothing about is
+ * left out of the map rather than entered with zeros: the caller has to be able
+ * to tell a show with nothing from one the index never mentioned.
  */
-async function subtitleCounts(client: TvSubtitlesClient): Promise<Map<number, number>> {
+async function catalogueCounts(client: TvSubtitlesClient): Promise<Map<number, IndexCounts>> {
   const read = await client.listShows();
-  const counts = new Map<number, number>();
+  const counts = new Map<number, IndexCounts>();
   for (const show of read.data.shows) {
-    if (show.subtitles !== null) {
-      counts.set(show.id, show.subtitles);
-    }
+    counts.set(show.id, {
+      subtitles: show.subtitles,
+      episodes: show.episodes,
+      seasons: show.seasons,
+    });
   }
   return counts;
 }
@@ -224,11 +247,11 @@ export async function runSearchTitles(
     );
   }
 
-  // Read only when asked for: the figure lives on the catalogue index, which is
+  // Read only when asked for: the figures live on the catalogue index, which is
   // a page of several hundred kilobytes and a second request on the one queue
   // every tool waits behind.
-  const counted = parsed.data.with_subtitle_count === true;
-  const counts = counted ? await subtitleCounts(client) : null;
+  const counted = parsed.data.with_counts === true;
+  const counts = counted ? await catalogueCounts(client) : null;
   let uncounted = 0;
 
   const results = rendered.map((row) => {
@@ -242,7 +265,11 @@ export async function runSearchTitles(
       year: row.year,
       media_type: "tv" as const,
       url: `https://www.tvsubtitles.net/tvshow-${row.id}.html`,
-      subtitle_count: count ?? null,
+      // Read one cell at a time: the index leaves them empty independently, so
+      // a show whose episodes it never counted may still have its seasons.
+      subtitle_count: count?.subtitles ?? null,
+      episode_count: count?.episodes ?? null,
+      season_count: count?.seasons ?? null,
       languages: row.languages,
       imdb_id: null,
       tmdb_id: null,
@@ -251,7 +278,7 @@ export async function runSearchTitles(
 
   if (counted) {
     notes.push(
-      "Each count is the figure the site publishes on its catalogue index, counting every season of that show together. It is not the number of rows this search served.",
+      "Each count is a figure the site publishes on its catalogue index, counting every season of that show together. None of them is the number of rows this search served.",
     );
   }
   if (uncounted > 0) {
@@ -278,7 +305,7 @@ export async function runSearchTitles(
       result_count: results.length,
       total_available: kept.length,
       total_counts: "rows_served" as const,
-      subtitle_count_scope: counted ? ("whole_show" as const) : null,
+      counts_scope: counted ? ("whole_show" as const) : null,
       filters_applied: applied,
       filters_dropped: dropped,
       cached: read.cached,

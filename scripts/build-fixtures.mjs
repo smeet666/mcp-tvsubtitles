@@ -126,6 +126,18 @@ const searchMatches = searchPage([
   searchHit(4160, "", "2020", ["en"]),
 ]);
 
+/**
+ * A search whose rows the index has nothing, or nothing usable, to say about.
+ *
+ * `Saltmarsh` sits in the index with its count cell left empty, and `Tidewater`
+ * is absent from the index altogether, which are the two ways a count asked for
+ * can come back unknown.
+ */
+const searchCountGaps = searchPage([
+  searchHit(4213, "Saltmarsh", "2016", ["en"]),
+  searchHit(4299, "Tidewater", "2019-2021", ["en", "fr"]),
+]);
+
 const searchEmpty = searchPage([]);
 
 /* ----------------------------------------------------------------- season */
@@ -734,6 +746,7 @@ const files = {
   "shows-index-no-footer.html": showsIndexNoFooter,
   "season-broken-row.html": seasonBrokenRow,
   "search-matches.html": searchMatches,
+  "search-count-gaps.html": searchCountGaps,
   "search-empty.html": searchEmpty,
   "season-full.html": seasonFull,
   "season-unknown-show.html": seasonUnknownShow,

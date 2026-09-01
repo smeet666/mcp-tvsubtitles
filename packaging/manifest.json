@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "mcp-tvsubtitles",
   "display_name": "TVsubtitles",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one record, with the page to download it. No API key required.",
   "long_description": "Search television series on tvsubtitles.net, see which languages cover each episode of a season, and read one subtitle's record with the release it was cut for. No API key, no account.",
   "author": {
@@ -33,9 +33,7 @@
     "entry_point": "server/index.js",
     "mcp_config": {
       "command": "node",
-      "args": [
-        "${__dirname}/server/index.js"
-      ]
+      "args": ["${__dirname}/server/index.js"]
     }
   },
   "tools": [
@@ -57,11 +55,7 @@
     }
   ],
   "compatibility": {
-    "platforms": [
-      "darwin",
-      "win32",
-      "linux"
-    ],
+    "platforms": ["darwin", "win32", "linux"],
     "runtimes": {
       "node": ">=24.0.0"
     }

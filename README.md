@@ -58,7 +58,7 @@ claude mcp add tvsubtitles -- npx -y mcp-tvsubtitles
   "mcpServers": {
     "tvsubtitles": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:0.1.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:0.2.0"]
     }
   }
 }
@@ -95,19 +95,23 @@ Node 24 or later is all it needs.
 Searches the catalogue by name. The site catalogues television only, so a search
 for a film is refused rather than answered.
 
-| Argument     | Type                       | Required | What it does                                             |
-| ------------ | -------------------------- | -------- | -------------------------------------------------------- |
-| `query`      | string, 1–120 characters   | yes      | The name of a series, or part of one.                    |
-| `media_type` | `movie` \| `tv` \| `any`   | no       | `tv` and `any` search the catalogue. `movie` is refused. |
-| `year`       | integer, 1900–2100         | no       | Keeps rows whose published years cover this one.         |
-| `limit`      | integer, 1–100, default 20 | no       | Rows to render.                                          |
+| Argument              | Type                       | Required | What it does                                                                         |
+| --------------------- | -------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `query`               | string, 1–120 characters   | yes      | The name of a series, or part of one.                                                |
+| `media_type`          | `movie` \| `tv` \| `any`   | no       | `tv` and `any` search the catalogue. `movie` is refused.                             |
+| `year`                | integer, 1900–2100         | no       | Keeps rows whose published years cover this one.                                     |
+| `limit`               | integer, 1–100, default 20 | no       | Rows to render.                                                                      |
+| `with_subtitle_count` | boolean, default false     | no       | Reads each row's count from the catalogue index, at the cost of one further request. |
 
 **In return:** the matching series, each with the `id` the other tools take, the
-years the site publishes, and the languages it draws a flag for. `subtitle_count`
-is always null, `imdb_id` and `tmdb_id` likewise, because the site's search
-publishes none. `total_available` counts the rows this one search came back with,
-which `total_counts` names. A year that leaves nothing is set aside and named in
-`filters_dropped`.
+years the site publishes, and the languages it draws a flag for. `imdb_id` and
+`tmdb_id` are null, because the site's search publishes none. `subtitle_count` is
+null unless `with_subtitle_count` asks for it, since the site publishes that
+figure on its catalogue index rather than on the page a search answers with; the
+figure counts every season of the show together, which `subtitle_count_scope`
+names, and a show the index carries no row for keeps a null. `total_available`
+counts the rows this one search came back with, which `total_counts` names. A
+year that leaves nothing is set aside and named in `filters_dropped`.
 
 ### `list_subtitles`
 
@@ -325,7 +329,7 @@ claude mcp add tvsubtitles -- npx -y mcp-tvsubtitles
   "mcpServers": {
     "tvsubtitles": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:0.1.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/smeet666/mcp-tvsubtitles:0.2.0"]
     }
   }
 }
@@ -362,19 +366,24 @@ dépendances, donc Node 24 ou plus récent suffit.
 Cherche dans le catalogue par le nom. Le site ne catalogue que la télévision,
 donc une recherche de film est refusée au lieu d'être répondue.
 
-| Argument     | Type                       | Requis | Ce qu'il fait                                                  |
-| ------------ | -------------------------- | ------ | -------------------------------------------------------------- |
-| `query`      | chaîne, 1 à 120 caractères | oui    | Le nom d'une série, ou une partie.                             |
-| `media_type` | `movie` \| `tv` \| `any`   | non    | `tv` et `any` cherchent dans le catalogue. `movie` est refusé. |
-| `year`       | entier, 1900 à 2100        | non    | Garde les lignes dont les années publiées couvrent celle-ci.   |
-| `limit`      | entier, 1 à 100, défaut 20 | non    | Lignes à rendre.                                               |
+| Argument              | Type                       | Requis | Ce qu'il fait                                                                           |
+| --------------------- | -------------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `query`               | chaîne, 1 à 120 caractères | oui    | Le nom d'une série, ou une partie.                                                      |
+| `media_type`          | `movie` \| `tv` \| `any`   | non    | `tv` et `any` cherchent dans le catalogue. `movie` est refusé.                          |
+| `year`                | entier, 1900 à 2100        | non    | Garde les lignes dont les années publiées couvrent celle-ci.                            |
+| `limit`               | entier, 1 à 100, défaut 20 | non    | Lignes à rendre.                                                                        |
+| `with_subtitle_count` | booléen, défaut faux       | non    | Lit le compte de chaque ligne dans l'index du catalogue, au prix d'une requête de plus. |
 
 **En retour :** les séries trouvées, chacune avec l'`id` que prennent les autres
 outils, les années publiées par le site et les langues pour lesquelles il dessine
-un drapeau. `subtitle_count` vaut toujours null, `imdb_id` et `tmdb_id` aussi,
-puisque la recherche du site n'en publie aucun. `total_available` compte les
-lignes que cette recherche a ramenées, ce que `total_counts` nomme. Une année qui
-ne laisse rien est mise de côté et nommée dans `filters_dropped`.
+un drapeau. `imdb_id` et `tmdb_id` valent null, puisque la recherche du site n'en
+publie aucun. `subtitle_count` vaut null tant que `with_subtitle_count` ne le
+demande pas, car le site publie ce chiffre sur l'index de son catalogue et non
+sur la page qui répond à une recherche ; il compte toutes les saisons de la série
+ensemble, ce que `subtitle_count_scope` nomme, et une série dont l'index ne porte
+aucune ligne garde un null. `total_available` compte les lignes que cette
+recherche a ramenées, ce que `total_counts` nomme. Une année qui ne laisse rien
+est mise de côté et nommée dans `filters_dropped`.
 
 ### `list_subtitles`
 

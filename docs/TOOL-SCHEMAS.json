@@ -8,7 +8,7 @@
     {
       "name": "search_titles",
       "title": "Search television series",
-      "description": "Search tvsubtitles.net for a television series by name. The site catalogues television only, so 'media_type' takes 'tv' or 'any' and a film is refused rather than answered with an absence. Each row carries the id the other tools take, the years the site publishes for the show, and the languages it draws a flag for. A row states no subtitle count, because the site's search publishes none. Show ids come from here and are never built by hand.",
+      "description": "Search tvsubtitles.net for a television series by name. The site catalogues television only, so 'media_type' takes 'tv' or 'any' and a film is refused rather than answered with an absence. Each row carries the id the other tools take, the years the site publishes for the show, and the languages it draws a flag for. Pass 'with_subtitle_count' for the number of subtitles the site holds per show: it publishes that figure on its catalogue index rather than on the page a search answers with, so reading it costs one further request over a large page, and the figure counts every season of the show together. Show ids come from here and are never built by hand.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -39,6 +39,10 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 100
+          },
+          "with_subtitle_count": {
+            "description": "Read each row's subtitle count from the site's catalogue index, which costs one further request over a page of several hundred kilobytes. The figure counts the whole show rather than this search, and a row the index says nothing about keeps a null.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -101,7 +105,7 @@
                       "type": "null"
                     }
                   ],
-                  "description": "Always null here: the site's search publishes no count."
+                  "description": "The site's own count of the subtitles it holds for this show, read from its catalogue index when 'with_subtitle_count' asked for it. Null without that argument, and null where the index printed nothing or carries no row for the show."
                 },
                 "languages": {
                   "type": "array",
@@ -150,6 +154,18 @@
             "const": "rows_served",
             "description": "What 'total_available' counted: the rows this one search came back with."
           },
+          "subtitle_count_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "whole_show"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What each row's 'subtitle_count' counts, when one was read: every season of that show together, which is a different figure from the rows this search served. Null when no count was asked for."
+          },
           "filters_applied": {
             "type": "array",
             "items": {
@@ -182,6 +198,7 @@
           "result_count",
           "total_available",
           "total_counts",
+          "subtitle_count_scope",
           "filters_applied",
           "filters_dropped",
           "cached",

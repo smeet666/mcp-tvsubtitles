@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-01
+
+### Added
+
+- `search_titles` takes `with_subtitle_count`, which reads each row's subtitle
+  count from the site's catalogue index. The site publishes that figure there
+  rather than on the page a search answers with, so it costs one further request
+  over a large page and is asked for rather than always read. The figure counts
+  every season of a show together, which `subtitle_count_scope` names, and a
+  show the index carries no row for keeps a null.
+
 ## [0.1.0] - 2026-09-01
 
 First release.
@@ -21,4 +32,5 @@ First release.
 - The client layer published on the `./client` subpath, with its pacing, its
   store and its error codes.
 
+[0.2.0]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v0.2.0
 [0.1.0]: https://github.com/smeet666/mcp-tvsubtitles/releases/tag/v0.1.0

@@ -1,0 +1,69 @@
+{
+  "manifest_version": "0.3",
+  "name": "mcp-tvsubtitles",
+  "display_name": "TVsubtitles",
+  "version": "0.1.0",
+  "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one record, with the page to download it. No API key required.",
+  "long_description": "Search television series on tvsubtitles.net, see which languages cover each episode of a season, and read one subtitle's record with the release it was cut for. No API key, no account.",
+  "author": {
+    "name": "Damien Bouissou",
+    "url": "https://github.com/smeet666"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smeet666/mcp-tvsubtitles.git"
+  },
+  "homepage": "https://github.com/smeet666/mcp-tvsubtitles#readme",
+  "documentation": "https://github.com/smeet666/mcp-tvsubtitles#readme",
+  "support": "https://github.com/smeet666/mcp-tvsubtitles/issues",
+  "icon": "assets/icon-512.png",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "model-context-protocol",
+    "mcp-server",
+    "tvsubtitles",
+    "subtitles",
+    "tv-series",
+    "srt"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "search_titles",
+      "description": "Find a television series by name."
+    },
+    {
+      "name": "list_subtitles",
+      "description": "Read a season's language coverage, or one episode's subtitle records."
+    },
+    {
+      "name": "get_subtitle",
+      "description": "Read one record, with its release and the page to download it."
+    },
+    {
+      "name": "list_languages",
+      "description": "List the languages the catalogue holds, or the ones one show holds."
+    }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=24.0.0"
+    }
+  }
+}

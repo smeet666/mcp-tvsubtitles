@@ -1,0 +1,86 @@
+{
+  "name": "mcp-tvsubtitles",
+  "version": "0.1.0",
+  "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one subtitle's record. No API key required.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "tvsubtitles",
+    "subtitles",
+    "tv-series",
+    "no-api-key"
+  ],
+  "homepage": "https://github.com/smeet666/mcp-tvsubtitles#readme",
+  "bugs": {
+    "url": "https://github.com/smeet666/mcp-tvsubtitles/issues"
+  },
+  "funding": {
+    "type": "buymeacoffee",
+    "url": "https://buymeacoffee.com/smeet666"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smeet666/mcp-tvsubtitles.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Damien Bouissou",
+    "url": "https://github.com/smeet666"
+  },
+  "type": "module",
+  "bin": {
+    "mcp-tvsubtitles": "dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/tvsubtitles/client.d.ts",
+      "import": "./dist/tvsubtitles/client.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "PRIVACY.md",
+    "server.json"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "mcpName": "io.github.smeet666/mcp-tvsubtitles",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
+    "test": "vitest run test/unit",
+    "coverage": "vitest run test/unit --coverage",
+    "test:live": "vitest run test/live --testTimeout=90000",
+    "build:fixtures": "node scripts/build-fixtures.mjs",
+    "build:manifest": "npm run build && node scripts/build-manifest-tools.mjs",
+    "format": "biome check --write && prettier --write \"**/*.{md,yml}\"",
+    "check": "biome ci && prettier --check \"**/*.{md,yml}\"",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build",
+    "start": "node dist/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "audit:floors": "node scripts/audit-floors.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.10",
+    "@types/node": "24.13.3",
+    "@vitest/coverage-v8": "4.1.11",
+    "prettier": "3.9.6",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

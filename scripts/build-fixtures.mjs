@@ -263,6 +263,16 @@ const seasonBrokenRow = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 
   seasonRow("3x08", 52_119, "Slack Water", 2, [{ kind: "one", code: "en", target: 880_440 }]),
 ]);
 
+/**
+ * A season whose table holds two rows the site opened as episodes and did not
+ * finish. One such row and two are counted the same way and said differently.
+ */
+const seasonTwoBrokenRows = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 3], 3), [
+  `<tr align="middle" bgcolor="#ffffff"><td>3x07</td></tr>`,
+  `<tr align="middle" bgcolor="#ffffff"><td>3x08</td></tr>`,
+  seasonRow("3x09", 52_121, "The Turning Tide", 1, [{ kind: "one", code: "en", target: 880_441 }]),
+]);
+
 /** A season listing its episodes while no language holds any of them. */
 const seasonEmptyCoverage = seasonPage("Harbour Lights", 3, seasonList(4210, [1, 2, 3], 3), [
   seasonRow("3x07", 52_118, "The Long Way Round", "", [{ kind: "blank" }, { kind: "blank" }]),
@@ -731,6 +741,30 @@ ${cell("downloaded", "downloads.png", "not a number", 100)}
 <div class="subtitlen"><h5>A block wrapped in no link at all</h5></div>`,
 );
 
+/**
+ * An episode page with two blocks whose links name no record.
+ *
+ * One block left out and two are counted the same way and said differently.
+ */
+const episodeTwoUnreadable = page(
+  "TVsubtitles.net - Subtitles for Harbour Lights 3x07",
+  `<b>Harbour Lights 3x07</b>&nbsp; <b>The Long Way Round</b> (Season 3 Episode 7)
+<b>Subtitles for this episode:</b>
+<a href="/subtitle-880462.html"><div title="Download english subtitles" class="subtitlen">
+  <h5 style="width:600px;"><img src="images/flags/en.gif" width="18" height="12" alt="" border=0 hspace=4 align=absmiddle>Harbour Lights 3x07 (HDTV.LOL)</h5>
+${cell("downloaded", "downloads.png", "12", 100)}
+</div></a>
+<a href="/subtitle.html"><div class="subtitlen"><h5>A block naming no record</h5></div></a>
+<a href="/subtitle-.html"><div class="subtitlen"><h5>Another naming none either</h5></div></a>`,
+);
+
+/** An episode page the site heads as it always does, holding no record at all. */
+const episodeNoRecord = page(
+  "TVsubtitles.net - Subtitles for Harbour Lights 3x07",
+  `<b>Harbour Lights 3x07</b>&nbsp; <b>The Long Way Round</b> (Season 3 Episode 7)
+<b>Subtitles for this episode:</b>`,
+);
+
 /** A record whose labels the site wrote in another order, with two left empty. */
 const subtitleOdd = subtitlePage({
   id: 880_470,
@@ -946,6 +980,7 @@ const files = {
   "shows-index.html": showsIndex,
   "shows-index-no-footer.html": showsIndexNoFooter,
   "season-broken-row.html": seasonBrokenRow,
+  "season-two-broken-rows.html": seasonTwoBrokenRows,
   "search-matches.html": searchMatches,
   "search-count-gaps.html": searchCountGaps,
   "search-unreadable-row.html": searchUnreadableRow,
@@ -976,6 +1011,8 @@ const files = {
   "season-odd.html": seasonOdd,
   "season-no-list.html": seasonNoList,
   "episode-odd.html": episodeOdd,
+  "episode-two-unreadable.html": episodeTwoUnreadable,
+  "episode-no-record.html": episodeNoRecord,
   "subtitle-odd.html": subtitleOdd,
   "subtitle-wordy-number.html": subtitleWordyNumber,
   "subtitle-no-language.html": subtitleNoLanguage,

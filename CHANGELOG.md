@@ -51,6 +51,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the budget covers this client's own waits between attempts.
 - A text block cut to fit ends on one ellipsis rather than two.
 
+### Changed
+
+- The test suite meets the 100% floor this repository keeps, on statements,
+  branches, functions and lines alike. `npm run coverage` builds first, so the
+  tests that read the built package find it. Seven guards no page of this site
+  can reach are excluded from the measure, each carrying the reason it cannot
+  be reached.
+
 ### Removed
 
 - `languageNameOf`, an export of a tool module that no caller could reach.

@@ -218,6 +218,9 @@ function coversYear(row: SearchRow, year: number): boolean {
   const bounds = row.year.split("-").map((part) => Number.parseInt(part, 10));
   const first = bounds[0];
   const last = bounds.at(-1);
+  /* v8 ignore start -- A year reaches this only through SEARCH_YEARS, which
+     captures four digits and optionally four more, so both bounds always parse.
+     The guard holds if that pattern is ever loosened. */
   if (
     first === undefined ||
     last === undefined ||
@@ -225,6 +228,7 @@ function coversYear(row: SearchRow, year: number): boolean {
   ) {
     return false;
   }
+  /* v8 ignore stop */
   return year >= first && year <= last;
 }
 
@@ -296,7 +300,11 @@ export async function runSearchTitles(
       fromMemory &&= catalogue.cached;
       counts = countsOf(catalogue.data.shows);
     } catch (error) {
+      /* v8 ignore start -- Everything the client raises passes through the HTTP
+         layer, which turns anything thrown into an Error before it leaves. The
+         other side guards against a caller's own fetch throwing a bare value. */
       countsUnread = error instanceof Error ? error.message : String(error);
+      /* v8 ignore stop */
       fromMemory = false;
     }
   }

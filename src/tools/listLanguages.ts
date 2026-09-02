@@ -154,7 +154,11 @@ export async function runListLanguages(
 function wholeCatalogue(season: number | undefined): ToolResult {
   const languages = catalogue();
   const divergences = isoNote(languages);
+  /* v8 ignore start -- The catalogue is the whole table, and six of its codes
+     differ from ISO 639-1, so this answer always carries the note. The null side
+     belongs to the per-show answer, which is measured. */
   const notes = divergences === null ? [CATALOGUE_NOTE] : [CATALOGUE_NOTE, divergences];
+  /* v8 ignore stop */
   // A season narrows a show, and the catalogue has none. Dropping it without a
   // word would let a caller read this answer as that season's languages.
   if (season !== undefined) {
@@ -165,8 +169,12 @@ function wholeCatalogue(season: number | undefined): ToolResult {
   const body = [
     "Languages tvsubtitles.net catalogues subtitles in.",
     ...languages.map(
+      /* v8 ignore start -- Every one of the twenty-four entries carries a tag,
+         so the fallback guards against a table that would have to be edited to
+         reach it. */
       (language) =>
         `${language.name} (site code ${language.site_code}, tag ${language.code ?? "none"})`,
+      /* v8 ignore stop */
     ),
   ].join("\n");
 
@@ -219,8 +227,12 @@ async function oneShow(
 
   const languages = catalogue()
     .filter((language) => held.has(language.site_code))
+    /* v8 ignore start -- The filter above keeps only codes the map holds, so
+       neither the lookup nor the two comparisons can meet an absent count. The
+       fallbacks are what the types require of a Map, not a case a page reaches. */
     .map((language) => ({ ...language, count: held.get(language.site_code) ?? null }))
     .sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name));
+  /* v8 ignore stop */
 
   // The warning about other seasons is written only where there are others: a
   // show holding one season has none for a reader to go looking through.

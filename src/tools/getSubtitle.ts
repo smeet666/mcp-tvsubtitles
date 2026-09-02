@@ -90,7 +90,13 @@ export async function runGetSubtitle(
     .join(" ");
 
   const body = [
+    /* v8 ignore start -- A record naming no show at all needs a page whose
+       title matches while carrying an empty name, and whose 'episode number'
+       and 'episode title' are both absent. SITE-NOTES.md measures those two
+       present on 50 records out of 50, so the empty heading guards against a
+       page the site does not serve. */
     heading === "" ? `Subtitle ${row.id} on tvsubtitles.net.` : `${heading}.`,
+    /* v8 ignore stop */
     `Language: ${row.language ?? "unstated"}.`,
     `Release: ${row.releases.length > 0 ? row.releases.join(", ") : "none published"}.`,
     `Uploaded: ${row.published_text ?? "unstated"}${row.uploader ? ` by ${row.uploader}` : ""}.`,

@@ -1,0 +1,1035 @@
+{
+  "author": "Damien Bouissou",
+  "authorUrl": "https://github.com/smeet666",
+  "description": "MCP server for tvsubtitles.net. Search TV series, read a season's subtitle coverage and one subtitle's record. No API key required.",
+  "homepage": "https://github.com/smeet666/mcp-tvsubtitles#readme",
+  "identifier": "smeet666-mcp-tvsubtitles",
+  "name": "mcp-tvsubtitles",
+  "prompts": [],
+  "resources": [],
+  "tags": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "tvsubtitles",
+    "subtitles",
+    "tv-series",
+    "no-api-key"
+  ],
+  "tools": [
+    {
+      "name": "search_titles",
+      "title": "Search television series",
+      "description": "Search tvsubtitles.net for a television series by name. The site catalogues television only, so 'media_type' takes 'tv' or 'any' and a film is refused rather than answered with an absence. Each row carries the id the other tools take, the years the site publishes for the show, and the languages it draws a flag for. Pass 'with_counts' for how many subtitles, episodes and seasons the site holds per show: it publishes those three on its catalogue index rather than on the page a search answers with, so reading them costs one further request over a large page, and each counts the whole show. Show ids come from here and are never built by hand.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "The name of a series, or part of one. The site matches on the name alone."
+          },
+          "media_type": {
+            "description": "'tv' or 'any' both search the catalogue, which holds television only. 'movie' is refused, because answering it with an empty list would report an absence this site cannot establish.",
+            "type": "string",
+            "enum": ["movie", "tv", "any"]
+          },
+          "year": {
+            "description": "Keep only shows whose published years cover this one. When that leaves nothing, the search is reported without it and a note says the year was set aside.",
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100
+          },
+          "limit": {
+            "description": "Rows to render, 20 by default and 100 at most.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "with_counts": {
+            "description": "Read each row's subtitle, episode and season counts from the site's catalogue index, which costs one further request over a page of several hundred kilobytes. Each figure counts the whole show rather than this search, each is read on its own, and a cell the index leaves empty keeps a null.",
+            "type": "boolean"
+          }
+        },
+        "required": ["query"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Pass this to list_subtitles as 'id'."
+                },
+                "title": {
+                  "type": "string"
+                },
+                "year": {
+                  "description": "The years as the site publishes them, a single year or a range. Null where it printed none.",
+                  "type": ["string", "null"]
+                },
+                "media_type": {
+                  "type": "string",
+                  "const": "tv",
+                  "description": "The site catalogues television only."
+                },
+                "url": {
+                  "type": "string",
+                  "description": "The show's page. Show this when citing the result."
+                },
+                "subtitle_count": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The site's own count of the subtitles it holds for this show, read from its catalogue index when 'with_counts' asked for it. Null without that argument, and null where the index printed nothing or carries no row for the show."
+                },
+                "episode_count": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The episodes the index counts for this show, on the same terms as 'subtitle_count'."
+                },
+                "season_count": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The seasons the index counts for this show, on the same terms as 'subtitle_count'."
+                },
+                "languages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The languages the site draws a flag for beside this show."
+                },
+                "imdb_id": {
+                  "type": "null",
+                  "description": "The site publishes none."
+                },
+                "tmdb_id": {
+                  "type": "null",
+                  "description": "The site publishes none."
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "year",
+                "media_type",
+                "url",
+                "subtitle_count",
+                "episode_count",
+                "season_count",
+                "languages",
+                "imdb_id",
+                "tmdb_id"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "result_count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Rows rendered here."
+          },
+          "total_available": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Rows the site's answer held, before any were rendered."
+          },
+          "total_counts": {
+            "type": "string",
+            "const": "rows_served",
+            "description": "What 'total_available' counted: the rows this one search came back with."
+          },
+          "counts_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "whole_show"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the three counts count, when they were read: every season of that show together, which is a different figure from the rows this search served. Null when no counts were asked for."
+          },
+          "filters_applied": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters_dropped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "True when the answer was served from memory rather than the site."
+          },
+          "source": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "query",
+          "results",
+          "result_count",
+          "total_available",
+          "total_counts",
+          "counts_scope",
+          "filters_applied",
+          "filters_dropped",
+          "cached",
+          "source",
+          "notes"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_subtitles",
+      "title": "List a season's coverage or an episode's subtitles",
+      "description": "List what tvsubtitles.net holds for one series. Pass 'id' from search_titles. With 'season' alone the answer is that season's coverage, one row per episode saying which languages hold something, and 'kind' reads 'coverage'. Add 'episode' and the answer is the subtitle records themselves, with 'kind' reading 'subtitles'. Leaving 'season' out reads the newest season, and the answer says which one that was. This server reads the catalogue: each record carries the page to open to download it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12,
+            "description": "A show id from search_titles. The site answers an id it does not hold with a page."
+          },
+          "season": {
+            "description": "Leave it out to read the newest season. The answer states which season it read.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "episode": {
+            "description": "Name an episode to read its subtitle records rather than the season's coverage.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "language": {
+            "description": "A language from list_languages, by its name, the site's two-letter code, or its BCP 47 tag. Left out, every language comes back.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "limit": {
+            "description": "Rows to render, 40 by default and 200 at most.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": ["id"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "show_name": {
+            "type": "string"
+          },
+          "season": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "The season the site served, which it states on the page."
+          },
+          "season_requested": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The season that was asked for, or null when the newest was asked for."
+          },
+          "seasons_available": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "result_count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "total_available": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "filters_applied": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters_dropped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["coverage", "subtitles"],
+            "description": "Which shape 'results' takes."
+          },
+          "episode": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The episode read, or null for a season."
+          },
+          "total_counts": {
+            "type": "string",
+            "enum": ["episodes_in_season", "rows_served"],
+            "description": "What 'total_available' counted: the episodes of a season, or the records one episode held."
+          },
+          "results": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "episode": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "episode_id": {
+                      "type": "string",
+                      "description": "The site's own id for the episode."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "subtitle_count": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "What the site counts for this episode. Null where it printed nothing."
+                    },
+                    "languages": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The languages holding something for this episode."
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "episode",
+                    "episode_id",
+                    "title",
+                    "subtitle_count",
+                    "languages",
+                    "url"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Pass this to get_subtitle."
+                    },
+                    "title_id": {
+                      "description": "The show this belongs to, where the page it was read from names one. A record's own page names no show, so a row whose 'read_from' is 'record' carries null here and names the show under 'show_name' instead.",
+                      "type": ["string", "null"]
+                    },
+                    "page_url": {
+                      "type": "string",
+                      "description": "The page a reader opens to download the file."
+                    },
+                    "language": {
+                      "description": "The language as the site names it.",
+                      "type": ["string", "null"]
+                    },
+                    "language_code": {
+                      "description": "BCP 47, where the site's own code maps to one with certainty. Null otherwise: the site writes 'br' for Brazilian Portuguese, which ISO assigns to Breton, so no code is derived.",
+                      "type": ["string", "null"]
+                    },
+                    "releases": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The video releases as published, in the case the uploader typed them. The site states the medium and the release group separately, and both appear here when it published them."
+                    },
+                    "read_from": {
+                      "type": "string",
+                      "enum": ["listing", "record"],
+                      "description": "Which page this row was read from. A listing carries no file name, no size and no comment, because the site prints those on a record's own page alone: read a null on one of the three as unread here rather than as something the site does not publish."
+                    },
+                    "release_match": {
+                      "type": "string",
+                      "enum": ["stated", "inferred", "none"],
+                      "description": "'stated' means the site published the release. 'none' means it published nothing, so the row says nothing about which video this is timed to. This site never infers one from a file name."
+                    },
+                    "season": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "episode": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "is_pack": {
+                      "type": "boolean",
+                      "description": "Always false here: the site catalogues one episode per record and holds no packs."
+                    },
+                    "files_in_pack": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Always null here, for the same reason."
+                    },
+                    "hearing_impaired": {
+                      "description": "Null: the site publishes no such marker.",
+                      "type": ["boolean", "null"]
+                    },
+                    "machine_translated": {
+                      "description": "Null: the site publishes no such marker.",
+                      "type": ["boolean", "null"]
+                    },
+                    "uploader": {
+                      "description": "Null on roughly two records out of three, where the site printed no author.",
+                      "type": ["string", "null"]
+                    },
+                    "published_at": {
+                      "description": "ISO 8601, read from the site's own stamp. The site states no timezone, so this carries none and 'published_text' keeps what it printed.",
+                      "type": ["string", "null"]
+                    },
+                    "published_text": {
+                      "description": "The stamp as the site printed it.",
+                      "type": ["string", "null"]
+                    },
+                    "downloads": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rating": {
+                      "type": "object",
+                      "properties": {
+                        "good": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "bad": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["good", "bad"],
+                      "additionalProperties": false,
+                      "description": "Two counters the site publishes and its readers barely use: a zero here is a figure the site printed rather than a poor opinion of the file."
+                    },
+                    "file_name": {
+                      "description": "The name of the file, as published.",
+                      "type": ["string", "null"]
+                    },
+                    "size_text": {
+                      "description": "The size as published, which the site states in kb.",
+                      "type": ["string", "null"]
+                    },
+                    "comment": {
+                      "description": "Free text the uploader left.",
+                      "type": ["string", "null"]
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title_id",
+                    "page_url",
+                    "language",
+                    "language_code",
+                    "releases",
+                    "read_from",
+                    "release_match",
+                    "season",
+                    "episode",
+                    "is_pack",
+                    "files_in_pack",
+                    "hearing_impaired",
+                    "machine_translated",
+                    "uploader",
+                    "published_at",
+                    "published_text",
+                    "downloads",
+                    "rating",
+                    "file_name",
+                    "size_text",
+                    "comment",
+                    "source"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            ],
+            "description": "Coverage rows when 'kind' is 'coverage', subtitle records when it is 'subtitles'."
+          }
+        },
+        "required": [
+          "id",
+          "show_name",
+          "season",
+          "season_requested",
+          "seasons_available",
+          "result_count",
+          "total_available",
+          "filters_applied",
+          "filters_dropped",
+          "cached",
+          "source",
+          "notes",
+          "kind",
+          "episode",
+          "total_counts",
+          "results"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_subtitle",
+      "title": "Read one subtitle's record",
+      "description": "Read one subtitle's record on tvsubtitles.net, from an id list_subtitles returned. The record carries the episode it belongs to, the release it was cut for, who uploaded it and when, its size and how often it was downloaded. Six of the site's ten fields are absent on some records, the author on roughly two out of three, and an absent field is null rather than blank. This server reads the catalogue: open 'page_url' to download the file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12,
+            "description": "A subtitle id from list_subtitles. The site answers an id it does not hold by sending the reader to its front page, which this reports as an absence."
+          }
+        },
+        "required": ["id"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "subtitle": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Pass this to get_subtitle."
+              },
+              "title_id": {
+                "description": "The show this belongs to, where the page it was read from names one. A record's own page names no show, so a row whose 'read_from' is 'record' carries null here and names the show under 'show_name' instead.",
+                "type": ["string", "null"]
+              },
+              "page_url": {
+                "type": "string",
+                "description": "The page a reader opens to download the file."
+              },
+              "language": {
+                "description": "The language as the site names it.",
+                "type": ["string", "null"]
+              },
+              "language_code": {
+                "description": "BCP 47, where the site's own code maps to one with certainty. Null otherwise: the site writes 'br' for Brazilian Portuguese, which ISO assigns to Breton, so no code is derived.",
+                "type": ["string", "null"]
+              },
+              "releases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The video releases as published, in the case the uploader typed them. The site states the medium and the release group separately, and both appear here when it published them."
+              },
+              "read_from": {
+                "type": "string",
+                "enum": ["listing", "record"],
+                "description": "Which page this row was read from. A listing carries no file name, no size and no comment, because the site prints those on a record's own page alone: read a null on one of the three as unread here rather than as something the site does not publish."
+              },
+              "release_match": {
+                "type": "string",
+                "enum": ["stated", "inferred", "none"],
+                "description": "'stated' means the site published the release. 'none' means it published nothing, so the row says nothing about which video this is timed to. This site never infers one from a file name."
+              },
+              "season": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "episode": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "is_pack": {
+                "type": "boolean",
+                "description": "Always false here: the site catalogues one episode per record and holds no packs."
+              },
+              "files_in_pack": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Always null here, for the same reason."
+              },
+              "hearing_impaired": {
+                "description": "Null: the site publishes no such marker.",
+                "type": ["boolean", "null"]
+              },
+              "machine_translated": {
+                "description": "Null: the site publishes no such marker.",
+                "type": ["boolean", "null"]
+              },
+              "uploader": {
+                "description": "Null on roughly two records out of three, where the site printed no author.",
+                "type": ["string", "null"]
+              },
+              "published_at": {
+                "description": "ISO 8601, read from the site's own stamp. The site states no timezone, so this carries none and 'published_text' keeps what it printed.",
+                "type": ["string", "null"]
+              },
+              "published_text": {
+                "description": "The stamp as the site printed it.",
+                "type": ["string", "null"]
+              },
+              "downloads": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rating": {
+                "type": "object",
+                "properties": {
+                  "good": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bad": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["good", "bad"],
+                "additionalProperties": false,
+                "description": "Two counters the site publishes and its readers barely use: a zero here is a figure the site printed rather than a poor opinion of the file."
+              },
+              "file_name": {
+                "description": "The name of the file, as published.",
+                "type": ["string", "null"]
+              },
+              "size_text": {
+                "description": "The size as published, which the site states in kb.",
+                "type": ["string", "null"]
+              },
+              "comment": {
+                "description": "Free text the uploader left.",
+                "type": ["string", "null"]
+              },
+              "source": {
+                "type": "string"
+              },
+              "show_name": {
+                "description": "The show the record names.",
+                "type": ["string", "null"]
+              },
+              "episode_title": {
+                "type": ["string", "null"]
+              }
+            },
+            "required": [
+              "id",
+              "title_id",
+              "page_url",
+              "language",
+              "language_code",
+              "releases",
+              "read_from",
+              "release_match",
+              "season",
+              "episode",
+              "is_pack",
+              "files_in_pack",
+              "hearing_impaired",
+              "machine_translated",
+              "uploader",
+              "published_at",
+              "published_text",
+              "downloads",
+              "rating",
+              "file_name",
+              "size_text",
+              "comment",
+              "source",
+              "show_name",
+              "episode_title"
+            ],
+            "additionalProperties": false
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["subtitle", "cached", "source", "notes"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_languages",
+      "title": "List the languages the catalogue holds",
+      "description": "List the languages tvsubtitles.net catalogues subtitles in. Called without arguments it returns the twenty-four the catalogue holds. Pass a show id from search_titles to read the languages that show actually holds, measured over one season and counted in episodes. Each entry carries the name the site prints, the two-letter code it addresses the language by, and the BCP 47 tag where that mapping is certain. Six of the site's codes differ from ISO 639-1 and one of them collides: the site writes 'br' for Brazilian Portuguese, which ISO assigns to Breton. Read this before narrowing list_subtitles by language.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "A show id from search_titles, to read what that show holds rather than what the catalogue does. Left out, the whole catalogue's languages come back.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12
+          },
+          "season": {
+            "description": "Which season to measure a show's languages over. Left out, the newest season is read. Ignored without 'id', because the catalogue has no season.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name the site prints, which list_subtitles accepts."
+                },
+                "site_code": {
+                  "type": "string",
+                  "description": "The code the site addresses this language by."
+                },
+                "code": {
+                  "description": "BCP 47, where the mapping is certain. Null where it is not.",
+                  "type": ["string", "null"]
+                },
+                "differs_from_iso": {
+                  "type": "boolean",
+                  "description": "True where the site's own code is not the ISO 639-1 one for this language."
+                },
+                "count": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Episodes of the season read that hold this language. Null for the catalogue, which publishes no per-language count this server can name."
+                }
+              },
+              "required": ["name", "site_code", "code", "differs_from_iso", "count"],
+              "additionalProperties": false
+            }
+          },
+          "language_count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["catalogue", "season"],
+            "description": "'catalogue' is every language the site catalogues, whatever any show holds. 'season' is what one season of one show holds, which is what was measured when 'id' was passed."
+          },
+          "show_id": {
+            "type": ["string", "null"]
+          },
+          "show_name": {
+            "type": ["string", "null"]
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The season measured, which the site states on the page it served."
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "languages",
+          "language_count",
+          "scope",
+          "show_id",
+          "show_name",
+          "season",
+          "cached",
+          "source",
+          "notes"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ],
+  "version": "1.0.1"
+}

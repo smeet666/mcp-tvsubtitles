@@ -260,7 +260,7 @@ async function oneShow(
           `Languages held for ${page.showName}, season ${page.season}.`,
           ...languages.map(
             (language) =>
-              `${language.name} (site code ${language.site_code}) — ${language.count} of ${page.episodes.length} episodes`,
+              `${language.name} (site code ${language.site_code}) · ${language.count} of ${page.episodes.length} episodes`,
           ),
         ].join("\n");
 

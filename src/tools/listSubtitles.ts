@@ -274,7 +274,7 @@ function coverage(
           `${page.showName}, season ${page.season}.`,
           ...results.map(
             (row) =>
-              `${page.season}x${String(row.episode).padStart(2, "0")} ${row.title} — ${row.subtitle_count ?? "?"} subtitles in ${row.languages.length} languages`,
+              `${page.season}x${String(row.episode).padStart(2, "0")} ${row.title} · ${row.subtitle_count ?? "?"} subtitles in ${row.languages.length} languages`,
           ),
         ].join("\n");
 
@@ -439,7 +439,7 @@ async function records(
           `${page.showName} ${page.season}x${String(episode).padStart(2, "0")}${row.title ? ` "${row.title}"` : ""}.`,
           ...results.map(
             (each) =>
-              `${each.id}: ${each.language}${each.releases.length > 0 ? ` (${each.releases.join(", ")})` : ""} — ${each.downloads ?? "?"} downloads`,
+              `${each.id}: ${each.language}${each.releases.length > 0 ? ` (${each.releases.join(", ")})` : ""} · ${each.downloads ?? "?"} downloads`,
           ),
         ].join("\n");
 

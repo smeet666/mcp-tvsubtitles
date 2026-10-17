@@ -1,3 +1,5 @@
+<img src="assets/icon-128.png" alt="" width="96" align="right">
+
 # mcp-tvsubtitles
 
 [![npm](https://img.shields.io/npm/v/mcp-tvsubtitles.svg)](https://www.npmjs.com/package/mcp-tvsubtitles)

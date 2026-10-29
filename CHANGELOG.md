@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-29
+
+### Changed
+
+- **Node.js 24.22.1 or later**, inside the Node.js 24 line. The package, the
+  extension manifest and the image all declare it.
+
 ## [1.0.2] - 2026-10-29
 
 ### Fixed

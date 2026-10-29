@@ -327,7 +327,7 @@ describe("a page holding not one readable row", () => {
 
   it("is parse_failure on a search", async () => {
     const failure = await fails(
-      clientOn(onePage("unreadable", `${BASE}/search1.php`)).searchShows("harbour"),
+      clientOn(onePage("unreadable", `${BASE}/search2.php`)).searchShows("harbour"),
     );
 
     expect(failure.code).toBe("parse_failure");

@@ -92,7 +92,7 @@ describe("the index read whole", () => {
 describe("a search whose rows are not all shows", () => {
   const searching = (): Site =>
     wholeSite([
-      [/search1\.php/, (call) => html(fixture("search-sparse"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-sparse"), call.url)],
       [/tvshows/, (call) => html(fixture("shows-index"), call.url)],
     ]);
 

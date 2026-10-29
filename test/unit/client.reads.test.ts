@@ -88,7 +88,7 @@ describe("the rows the site's own add form let into the catalogue", () => {
   });
 
   it("drops the same payloads out of a search answer", async () => {
-    const where = onePage(fixture("search-matches"), `${BASE}/search1.php`);
+    const where = onePage(fixture("search-matches"), `${BASE}/search2.php`);
 
     const read = await succeeds(clientOn(where).searchShows("harbour"));
     const names = read.data.rows.map((row) => row.name);

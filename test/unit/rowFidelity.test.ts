@@ -67,7 +67,7 @@ describe("a release the site names twice", () => {
 describe("the counts the catalogue index publishes", () => {
   it("carries the episodes and the seasons beside the subtitles", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-matches"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-matches"), call.url)],
       [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
     ]);
     const result = await succeeds(
@@ -92,7 +92,7 @@ describe("the counts the catalogue index publishes", () => {
 
   it("leaves a count the index printed nothing for null, one cell at a time", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-count-gaps"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-count-gaps"), call.url)],
       [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
     ]);
     const result = await succeeds(

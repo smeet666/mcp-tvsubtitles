@@ -71,7 +71,7 @@ describe("8. a season page in a shape this cannot read", () => {
 describe("9. an answer that needed two pages", () => {
   it("is reported as cached only when both came from memory", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-matches"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-matches"), call.url)],
       [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
     ]);
     const client = clientOn(where);
@@ -113,7 +113,7 @@ describe("10. a setting outside the range this server keeps", () => {
 
 describe("11. what a search says it came back with", () => {
   it("counts the rows the site answered, before a filter narrowed them", async () => {
-    const where = site([[/search1\.php/, (call) => html(fixture("search-matches"), call.url)]]);
+    const where = site([[/search2\.php/, (call) => html(fixture("search-matches"), call.url)]]);
     const wide = await succeeds(runSearchTitles(clientOn(where), { query: "h" } as never));
     const narrow = await succeeds(
       runSearchTitles(clientOn(where), { query: "h", year: 2012 } as never),

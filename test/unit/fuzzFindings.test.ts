@@ -162,7 +162,7 @@ describe("3. rows a listing could not read", () => {
 describe("4. a search row the site did not finish writing", () => {
   it("is counted and named, as an index row would be", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-unreadable-row"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-unreadable-row"), call.url)],
     ]);
     const result = await succeeds(runSearchTitles(clientOn(where), { query: "h" } as never));
     const notes = (result.structuredContent as { notes: string[] }).notes.join(" ");
@@ -176,7 +176,7 @@ describe("4. a search row the site did not finish writing", () => {
 describe("5. the counts a search can be asked for", () => {
   it("do not take the search down with them when the index cannot be read", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-matches"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-matches"), call.url)],
       [/\/tvshows\.html/, (call) => html("", call.url, 500)],
     ]);
     const result = await succeeds(

@@ -31,7 +31,7 @@ describe("the addresses this server builds", () => {
     expect(episodeUrl(52_118)).toBe(`${BASE_URL}/episode-52118.html`);
     expect(episodeLanguageUrl(52_118, "fr")).toBe(`${BASE_URL}/episode-52118-fr.html`);
     expect(subtitleUrl(880_431)).toBe(`${BASE_URL}/subtitle-880431.html`);
-    expect(searchUrl()).toBe(`${BASE_URL}/search1.php`);
+    expect(searchUrl()).toBe(`${BASE_URL}/search2.php`);
   });
 
   it("ask the site for the newest season with the number it reserves for it", () => {

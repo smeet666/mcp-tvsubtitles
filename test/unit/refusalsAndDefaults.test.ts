@@ -210,7 +210,7 @@ describe("a season the site prints no episode row for", () => {
 describe("a search matching several shows the index carries no row for", () => {
   it("says their counts are unknown in the plural", async () => {
     const where = wholeSite([
-      [/search1\.php/, (call) => html(fixture("search-two-uncounted"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-two-uncounted"), call.url)],
     ]);
 
     const result = await succeeds(

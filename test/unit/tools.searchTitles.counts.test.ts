@@ -46,7 +46,7 @@ afterEach(() => {
 /** A site whose search answers with rows the index has something to say about. */
 const searching = (searchFixture: string) =>
   site([
-    [/search1\.php/, (call) => html(fixture(searchFixture), call.url)],
+    [/search2\.php/, (call) => html(fixture(searchFixture), call.url)],
     [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
   ]);
 

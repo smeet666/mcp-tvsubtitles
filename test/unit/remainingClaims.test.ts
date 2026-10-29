@@ -70,7 +70,7 @@ describe("1. a note about a language set aside", () => {
 describe("2. the rows an index answer left out", () => {
   it("names each population it actually dropped, rather than calling them all payloads", async () => {
     const where = site([
-      [/search1\.php/, (call) => html(fixture("search-matches"), call.url)],
+      [/search2\.php/, (call) => html(fixture("search-matches"), call.url)],
       [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
     ]);
     const result = await succeeds(runSearchTitles(clientOn(where), { query: "water" } as never));
@@ -112,7 +112,7 @@ describe("3. a list of nothing", () => {
 
 describe("4. characters that reverse a line's direction", () => {
   it("do not reach the rendered block, whoever sent them", async () => {
-    const where = site([[/search1\.php/, (call) => html(fixture("search-empty"), call.url)]]);
+    const where = site([[/search2\.php/, (call) => html(fixture("search-empty"), call.url)]]);
     const result = await succeeds(runSearchTitles(clientOn(where), { query: "‮Shogun" } as never));
     const text = (result.content ?? []).map((block) => block.text ?? "").join("\n");
 
@@ -122,7 +122,7 @@ describe("4. characters that reverse a line's direction", () => {
   });
 
   it("survive in the payload, which is where what was received is kept", async () => {
-    const where = site([[/search1\.php/, (call) => html(fixture("search-empty"), call.url)]]);
+    const where = site([[/search2\.php/, (call) => html(fixture("search-empty"), call.url)]]);
     const result = await succeeds(runSearchTitles(clientOn(where), { query: "‮Shogun" } as never));
 
     expect((result.structuredContent as { query: string }).query).toContain("‮");

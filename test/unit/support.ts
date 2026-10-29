@@ -143,7 +143,7 @@ export function wholeSite(overrides: [RegExp, Responder][] = []): Site {
   return site([
     ...overrides,
     [/\/tvshows\.html/, (call) => html(fixture("shows-index"), call.url)],
-    [/search1\.php/, (call) => html(fixture("search-matches"), call.url)],
+    [/search2\.php/, (call) => html(fixture("search-matches"), call.url)],
     [/\/tvshow-\d+-9\.html/, (call) => html(fixture("season-past-last"), call.url)],
     [/\/tvshow-/, (call) => html(fixture("season-full"), call.url)],
     // The episode one language holds exactly one record of.

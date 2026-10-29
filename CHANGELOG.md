@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-29
+
+### Fixed
+
+- **`search_titles` reaches the site's search again.** tvsubtitles.net moved
+  its search form from `search1.php` to `search2.php` and answers the old
+  address with 404, which every search reported as an address holding nothing.
+  The form keeps its field and its answer keeps its shape.
+
 ## [1.0.1] - 2026-09-01
 
 ### Fixed

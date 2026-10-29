@@ -76,7 +76,7 @@ export const subtitleUrl = (subtitleId: number): string =>
   `${BASE_URL}/subtitle-${pathNumber(subtitleId, "subtitleId")}.html`;
 
 /** Where the site takes a search of its own form. */
-export const searchUrl = (): string => `${BASE_URL}/search1.php`;
+export const searchUrl = (): string => `${BASE_URL}/search2.php`;
 
 /**
  * Whether an address is the site's front page.

@@ -110,15 +110,19 @@ describe("the tools, against what the server publishes", () => {
 
   it("name exactly the arguments each published schema declares", () => {
     for (const tool of tools) {
-      const declared = Object.keys(tool.inputSchema.properties ?? {}).sort();
+      const declared = Object.keys(tool.inputSchema.properties ?? {}).sort(
+        (a, b) => Number(a > b) - Number(a < b),
+      );
       // Bounded at the next heading: a subsection read to the end of the file
       // would take in every later table, and the assertion would then pass on
       // arguments documented for another tool.
       const opened = readme.split(`### \`${tool.name}\``)[1] ?? "";
       const section = opened.split(/\n#{2,3} /)[0] ?? "";
-      const documented = [...section.matchAll(/^\| `([a-z_]+)`\s*\|/gm)].map((match) => match[1]);
+      const documented = [...section.matchAll(/^\| `([a-z_]+)`\s*\|/gm)].map(
+        (match) => match[1] ?? "",
+      );
       expect(
-        [...new Set(documented)].sort(),
+        [...new Set(documented)].sort((a, b) => Number(a > b) - Number(a < b)),
         `the argument table of ${tool.name} has drifted from its schema`,
       ).toEqual(declared);
     }

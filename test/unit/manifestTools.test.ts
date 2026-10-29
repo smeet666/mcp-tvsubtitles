@@ -33,7 +33,10 @@ describe("the manifest, against the server it describes", () => {
 
   it("carries of each tool only what the bundle format defines", () => {
     for (const tool of manifest.tools) {
-      expect(Object.keys(tool).sort(), `tool ${tool.name}`).toEqual(["description", "name"]);
+      expect(
+        Object.keys(tool).sort((a, b) => Number(a > b) - Number(a < b)),
+        `tool ${tool.name}`,
+      ).toEqual(["description", "name"]);
     }
   });
 

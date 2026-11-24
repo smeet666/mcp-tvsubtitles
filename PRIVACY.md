@@ -1,42 +1,87 @@
 # Privacy
 
+This server collects nothing about you, and sends nothing to its author.
+
 _[Version française](#confidentialité)_
 
-`mcp-tvsubtitles` reads a public website. It has no account, no API key and no
-telemetry.
+---
 
-## What it sends, and where
+## What this server is
 
-The only host it reaches is `https://www.tvsubtitles.net`. Every request carries
-the `User-Agent` this server builds: its name, its version and the address of
-this repository, so the site can reach a person about traffic it did not expect.
-`TVS_USER_AGENT` puts a caller's own agent in front of that one, which stays
-attached.
+`mcp-tvsubtitles` is a read-only client for
+[tvsubtitles.net](https://www.tvsubtitles.net). It runs on your own machine, as
+a process your MCP host starts, and it speaks over stdio. It listens on no port.
 
-The words a search is given travel to the site as the search itself, because
-that is the request. Nothing else about the caller is sent: no identifier, no
-address, no history of earlier calls.
+It needs no API key and no account, so there is no credential for it to hold and
+none for it to send.
 
-## What it stores
+It reads the site's catalogue and downloads no subtitle file. Every record it
+answers with carries the address of the page you open to download it yourself.
 
-Pages are held in memory for fifteen minutes by default, keyed by the address
-they came from, and at most two hundred of them. `TVS_CACHE_TTL_MS` and
-`TVS_CACHE_MAX_ENTRIES` change both, and a lifetime of zero turns the store off.
-The store lives in the process and is gone when it exits.
+## What leaves your machine, and where it goes
 
-Nothing is written to disk.
+**One host is contacted: `www.tvsubtitles.net`.** Nothing else.
 
-## What it logs
+| Host                  | What is read there |
+| --------------------- | ------------------ |
+| `www.tvsubtitles.net` | the site's pages   |
 
-Diagnostics go to stderr, never to stdout, which carries the protocol.
-`TVS_LOG_LEVEL` is `error` by default, so what is written is a failure or a
-count of rows that were dropped. At `debug` the addresses it fetches are written
-too. Nothing is sent anywhere.
+What a request carries:
 
-## Credentials
+| What                   | Why it is there                                                                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| The question you asked | A series name or an identifier reaches the site as you wrote it.                                                                          |
+| A `User-Agent`         | `mcp-tvsubtitles/<version> (+https://github.com/smeet666/mcp-tvsubtitles)`, so the site can reach a person about the traffic it receives. |
+| Your IP address        | Sent by your network to any host you contact, as with any web request.                                                                    |
 
-This server sends none, because the site asks for none. No environment variable
-it reads is a secret.
+Your requests reach tvsubtitles.net. What is done with them there is governed by
+that site's own practices, which this project does not control.
+
+## What is kept, and for how long
+
+**Answers are held in memory only, and only while the server runs.** The cache is
+a table in the process: it holds what was read so that reading the same page
+twice costs one request instead of two. It holds at most two hundred pages for
+fifteen minutes each by default, and closing the server empties it.
+
+**Nothing is written to disk.** The server creates no file, no database and no
+log file.
+
+## What is never collected
+
+- No analytics, no telemetry, no usage counter.
+- Nothing is sent to the author of this project or to any third party.
+- No account, no profile, no identifier is created for you.
+- Your questions are not stored, forwarded, or used to train anything.
+
+## Logs
+
+The server writes diagnostics to **stderr**, where your MCP host decides what
+becomes of them. `TVS_LOG_LEVEL` governs how much is written and defaults to
+`error`. At that setting the lines are failures and counts of rows left out; at
+`debug` the addresses fetched are written too. These lines stay on your machine.
+
+## The settings that change any of this
+
+| Variable           | What it changes                                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `TVS_USER_AGENT`   | Adds your own identifier in front of this project's, which stays appended so the site can always reach a person. |
+| `TVS_CACHE_TTL_MS` | How long an answer is held in memory. `0` turns the cache off.                                                   |
+| `TVS_LOG_LEVEL`    | How much is written to stderr.                                                                                   |
+
+## Children
+
+This server is a tool for developers and it is not directed at children.
+
+## Changes
+
+A change to this policy travels in a release, and the changelog names it.
+
+## Contact
+
+Open an issue on
+[the repository](https://github.com/smeet666/mcp-tvsubtitles/issues). For
+something exploitable, follow [SECURITY.md](./SECURITY.md) instead.
 
 ---
 
@@ -44,40 +89,87 @@ it reads is a secret.
 
 # Confidentialité
 
+Ce serveur ne collecte rien sur vous, et n'envoie rien à son auteur.
+
 _[English version](#privacy)_
 
-`mcp-tvsubtitles` lit un site public. Il n'a ni compte, ni clé d'API, ni
-télémétrie.
+## Ce qu'est ce serveur
 
-## Ce qu'il envoie, et où
+`mcp-tvsubtitles` est un client en lecture seule pour
+[tvsubtitles.net](https://www.tvsubtitles.net). Il tourne sur votre machine, en
+tant que processus lancé par votre hôte MCP, et parle sur stdio. Il n'écoute sur
+aucun port.
 
-Le seul hôte qu'il joint est `https://www.tvsubtitles.net`. Chaque requête porte
-le `User-Agent` que ce serveur construit : son nom, sa version et l'adresse de ce
-dépôt, pour que le site puisse joindre une personne à propos d'un trafic qu'il
-n'attendait pas. `TVS_USER_AGENT` place l'agent d'un appelant devant celui-là,
-qui reste attaché.
+Il n'a besoin d'aucune clé d'API ni d'aucun compte, donc il ne détient aucun
+identifiant et n'en envoie aucun.
 
-Les mots d'une recherche voyagent vers le site en tant que recherche, puisque
-c'est la requête elle-même. Rien d'autre sur l'appelant n'est envoyé : aucun
-identifiant, aucune adresse, aucun historique des appels précédents.
+Il lit le catalogue du site et ne télécharge aucun fichier de sous-titres. Chaque
+fiche qu'il rend porte l'adresse de la page que vous ouvrez pour le télécharger
+vous-même.
 
-## Ce qu'il garde
+## Ce qui quitte votre machine, et où cela va
 
-Les pages sont gardées quinze minutes en mémoire par défaut, indexées par
-l'adresse d'où elles viennent, et deux cents au plus. `TVS_CACHE_TTL_MS` et
-`TVS_CACHE_MAX_ENTRIES` changent les deux, et une durée de zéro éteint le cache.
-Le stock vit dans le processus et disparaît avec lui.
+**Un seul hôte est joint : `www.tvsubtitles.net`.** Rien d'autre.
 
-Rien n'est écrit sur le disque.
+| Hôte                  | Ce qui y est lu   |
+| --------------------- | ----------------- |
+| `www.tvsubtitles.net` | les pages du site |
 
-## Ce qu'il journalise
+Ce que porte une requête :
 
-Les diagnostics vont sur stderr, jamais sur stdout, qui porte le protocole.
-`TVS_LOG_LEVEL` vaut `error` par défaut, donc ce qui est écrit est une panne ou
-un décompte de lignes écartées. À `debug`, les adresses jointes le sont aussi.
-Rien n'est envoyé nulle part.
+| Quoi              | Pourquoi c'est là                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| La question posée | Un nom de série ou un identifiant atteint le site tel que vous l'avez écrit.                                                                     |
+| Un `User-Agent`   | `mcp-tvsubtitles/<version> (+https://github.com/smeet666/mcp-tvsubtitles)`, pour que le site puisse joindre une personne au sujet de son trafic. |
+| Votre adresse IP  | Transmise par votre réseau à tout hôte que vous joignez, comme pour toute requête web.                                                           |
 
-## Identifiants
+Vos requêtes atteignent tvsubtitles.net. Ce qui en est fait là-bas relève des
+pratiques de ce site, que ce projet ne contrôle pas.
 
-Ce serveur n'en envoie aucun, parce que le site n'en demande aucun. Aucune
-variable d'environnement qu'il lit n'est un secret.
+## Ce qui est conservé, et combien de temps
+
+**Les réponses ne sont gardées qu'en mémoire, et seulement pendant que le serveur
+tourne.** Le cache est une table dans le processus : il garde ce qui a été lu
+pour qu'une même page lue deux fois ne coûte qu'une requête. Il tient deux cents
+pages au plus, quinze minutes chacune par défaut, et fermer le serveur le vide.
+
+**Rien n'est écrit sur le disque.** Le serveur ne crée aucun fichier, aucune base
+et aucun journal.
+
+## Ce qui n'est jamais collecté
+
+- Aucune analyse d'audience, aucune télémétrie, aucun compteur d'usage.
+- Rien n'est envoyé à l'auteur de ce projet ni à un tiers.
+- Aucun compte, aucun profil, aucun identifiant n'est créé pour vous.
+- Vos questions ne sont ni stockées, ni transmises, ni utilisées pour entraîner
+  quoi que ce soit.
+
+## Les journaux
+
+Le serveur écrit ses diagnostics sur **stderr**, où votre hôte MCP décide de leur
+sort. `TVS_LOG_LEVEL` règle ce qui est écrit et vaut `error` par défaut. À ce
+réglage les lignes sont des pannes et des décomptes de lignes écartées ; à
+`debug` les adresses jointes s'y ajoutent. Ces lignes restent sur votre machine.
+
+## Les réglages qui changent tout cela
+
+| Variable           | Ce qu'elle change                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `TVS_USER_AGENT`   | Place votre propre identifiant devant celui du projet, qui reste ajouté pour que le site puisse toujours joindre une personne. |
+| `TVS_CACHE_TTL_MS` | La durée pendant laquelle une réponse est gardée en mémoire. `0` éteint le cache.                                              |
+| `TVS_LOG_LEVEL`    | Ce qui est écrit sur stderr.                                                                                                   |
+
+## Les enfants
+
+Ce serveur est un outil pour développeurs et il ne s'adresse pas aux enfants.
+
+## Les évolutions
+
+Un changement de cette politique voyage dans une version, et le changelog le
+nomme.
+
+## Contact
+
+Ouvrez une issue sur
+[le dépôt](https://github.com/smeet666/mcp-tvsubtitles/issues). Pour quelque
+chose d'exploitable, suivez [SECURITY.md](./SECURITY.md) à la place.
